@@ -8,7 +8,6 @@ const Header: React.FC = () => {
   const router = useRouter()
   const isActive: (pathname: string) => boolean = (pathname) =>
     router.pathname === pathname
-
   const [session, loading] = useSession()
 
   let left = (
@@ -119,13 +118,10 @@ const Header: React.FC = () => {
       <div className="left">
         <Link href="/">
           <a className="bold" data-active={isActive('/')}>
-            Feed
+            Profile
           </a>
         </Link>
-        <Link href="/drafts">
-          <a data-active={isActive('/drafts')}>My drafts</a>
-        </Link>
-        
+
         <style jsx>{`
           .bold {
             font-weight: bold;
