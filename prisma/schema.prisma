@@ -91,6 +91,7 @@ model Monster {
   id                 Int     @id @default(autoincrement())
   name               String? @unique
   health             Int
+  maxHealth          Int @default(10)
   armor              Int
   damageReduction    Int
   evasion            Int

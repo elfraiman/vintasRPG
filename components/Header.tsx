@@ -198,6 +198,8 @@ const Header: React.FC = () => {
           display: flex;
           padding: 2rem;
           align-items: center;
+          box-shadow: rgba(0, 0, 0, 0.3) 0 1px 3px;
+          margin-bottom: 16px;
         }
       `}</style>
     </nav>

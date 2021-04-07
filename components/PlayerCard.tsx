@@ -22,7 +22,6 @@ const PlayerCard = ({ fullPlayer }: IPlayerCardProps) => {
 
   equipement = fullPlayer.equipement;
   player = fullPlayer.player;
-  console.log(fullPlayer, "props");
 
   const calculatePercentHealth = (cur: number, max: number) => {
     const p = cur / max;
@@ -39,10 +38,10 @@ const PlayerCard = ({ fullPlayer }: IPlayerCardProps) => {
   return (
     <React.Fragment>
       <Card
-        title={fullPlayer.player.name}
+        title={player.name}
         style={{
           width: 300,
-          height: 300,
+          minHeight: 300,
           display: "flex",
           flexDirection: "column",
         }}
@@ -71,7 +70,7 @@ const PlayerCard = ({ fullPlayer }: IPlayerCardProps) => {
               : "success"
           }
         />
-        <p >
+        <p>
           {equipement.weapon.name} ({equipement.weapon.minDamage}-
           {equipement.weapon.maxDamage})
         </p>

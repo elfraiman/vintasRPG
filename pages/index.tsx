@@ -1,11 +1,16 @@
 import { Monster } from "@prisma/client";
-import { Button } from "antd";
+import { message, Button, Row, Col } from "antd";
 import { getSession, useSession } from "next-auth/client";
 import React, { useState } from "react";
 import Header from "../components/Header";
 import MonsterCard from "../components/MonsterCard";
 import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
 import prisma from "../lib/prisma";
+
+export enum STATSMULTIPLIERS {
+  STR = 0.255,
+  DEX = 0.125,
+}
 
 function HomePage(props) {
   const [session, loading] = useSession();
@@ -20,37 +25,122 @@ function HomePage(props) {
       </React.Fragment>
     );
 
-  const save = async () => {
-    console.log('fetch');
+  const savePlayer = async () => {
     await fetch(`http://localhost:3000/api/player/${fullPlayer.player.id}`, {
-      method: 'POST',
-      body: JSON.stringify(fullPlayer.player)
-    })
+      method: "POST",
+      body: JSON.stringify(fullPlayer.player),
+    });
   };
 
-  const startFight = () => {
-    const interval = setInterval(() => {
-      console.log("doing fight");
+  const playerWin = () => {
+    // Player Won
+    // Add experience and rewards to player for killing monster
+    //
+    setFullPlayer({
+      equipement: fullPlayer.equipement,
+      player: {
+        ...fullPlayer.player,
+        experience: (fullPlayer.player.experience += monster.experience),
+      },
+    });
+
+    // If level  up
+    if (fullPlayer.player.experience >= fullPlayer.player.experienceToLevelUp) {
       setFullPlayer({
         equipement: fullPlayer.equipement,
         player: {
           ...fullPlayer.player,
-          health: (fullPlayer.player.health -= 1),
+          level: (fullPlayer.player.level += 1),
         },
       });
+    }
 
-      if (fullPlayer.player.health === 0) {
-        clearInterval(interval);
-        save();
+    message.info(
+      `You killed ${monster.name} and gained ${monster.experience} experience`
+    );
+    // Saves the local obj to the backend;
+    savePlayer();
+  };
+
+  const doPlayerAttack = () => {
+    const attackSpeed = 2000;
+    const calculatedTotalDamage =
+      fullPlayer.player.strength * STATSMULTIPLIERS.STR +
+      fullPlayer.equipement.weapon.maxDamage;
+    const calculatedMinimumDamage =
+      fullPlayer.player.strength * STATSMULTIPLIERS.STR +
+      fullPlayer.equipement.weapon.minDamage;
+
+    const upcomingHit = Math.floor(
+      Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
+        calculatedMinimumDamage
+    );
+
+    const fight = setInterval(() => {
+      if (monster.health > 0 && fullPlayer.player.health > 0) {
+        setMonster({
+          ...monster,
+          health: (monster.health -= upcomingHit),
+        });
+      } else {
+        setMonster({
+          ...monster,
+          health: (monster.health = 0),
+        });
+        playerWin();
+        clearInterval(fight);
       }
-    }, 1000);
+    }, attackSpeed);
+  };
+
+  const doMonsterAttack = () => {
+    const attackSpeed = 2000;
+    const upcomingHit = Math.floor(
+      Math.random() * (monster.maxDamage - monster.minDamage) +
+        monster.minDamage
+    );
+
+    const fight = setInterval(() => {
+      if (fullPlayer.player.health > 0 && monster.health > 0) {
+        setFullPlayer({
+          equipement: fullPlayer.equipement,
+          player: {
+            ...fullPlayer.player,
+            health: (fullPlayer.player.health -= upcomingHit),
+          },
+        });
+      } else if (fullPlayer.player.health <= 0) {
+        setFullPlayer({
+          equipement: fullPlayer.equipement,
+          player: {
+            ...fullPlayer.player,
+            health: (fullPlayer.player.health = 0),
+          },
+        });
+
+        clearInterval(fight);
+      }
+    }, attackSpeed);
+  };
+
+  const startFight = () => {
+    if (fullPlayer.player.health > 0) {
+      doPlayerAttack();
+      doMonsterAttack();
+    }
   };
 
   return (
     <React.Fragment>
       <Header />
-      <PlayerCard fullPlayer={fullPlayer} />
-      <MonsterCard monster={monster} />
+      <Row>
+        <Col span={12}>
+          <PlayerCard fullPlayer={fullPlayer} />
+        </Col>
+        <Col span={12}>
+          <MonsterCard monster={monster} />
+        </Col>
+      </Row>
 
       <Button onClick={startFight}> fight </Button>
     </React.Fragment>

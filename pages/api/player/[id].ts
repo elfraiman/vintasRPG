@@ -6,12 +6,12 @@ import prisma from "../../../lib/prisma";
 export default async function handle(req, res) {
   const player = JSON.parse(req.body);
 
-  prisma.player
+ const result = prisma.player
     .update({
       where: { userId: parseInt(req.query.id, 10) },
       data: {
-       ...player
+        ...player,
       },
     })
-    .then(() => Promise.resolve(res).catch((error) => console.error(error)));
+    .then(() => res.json(result).catch((error) => console.error(error)));
 }
