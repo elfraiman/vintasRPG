@@ -12,15 +12,11 @@ const MonsterCard = ({ monster }: IMonsterCardProps) => {
 
   if (!loading && !session) return null;
 
-  console.log(monster, "props");
-
   const calculatePercentHealth = (cur: number, max: number) => {
     const p = cur / max;
     const result = p * 100;
     return result;
   };
-
-
 
   return (
     <React.Fragment>

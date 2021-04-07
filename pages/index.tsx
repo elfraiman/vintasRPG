@@ -29,7 +29,12 @@ function HomePage(props) {
     await fetch(`http://localhost:3000/api/player/${fullPlayer.player.id}`, {
       method: "POST",
       body: JSON.stringify(fullPlayer.player),
-    });
+    }).then((response) => {
+      console.log(response)
+      message.info(
+        `You killed ${monster.name} and gained ${monster.experience} experience`
+      );
+    })
   };
 
   const playerWin = () => {
@@ -55,9 +60,7 @@ function HomePage(props) {
       });
     }
 
-    message.info(
-      `You killed ${monster.name} and gained ${monster.experience} experience`
-    );
+
     // Saves the local obj to the backend;
     savePlayer();
   };
@@ -83,11 +86,11 @@ function HomePage(props) {
           health: (monster.health -= upcomingHit),
         });
       } else {
+        playerWin();
         setMonster({
           ...monster,
-          health: (monster.health = 0),
+          health: monster.maxHealth,
         });
-        playerWin();
         clearInterval(fight);
       }
     }, attackSpeed);
@@ -117,7 +120,7 @@ function HomePage(props) {
             health: (fullPlayer.player.health = 0),
           },
         });
-
+        savePlayer();
         clearInterval(fight);
       }
     }, attackSpeed);
