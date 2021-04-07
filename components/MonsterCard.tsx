@@ -1,15 +1,17 @@
-import { Monster, Player, Weapon } from "@prisma/client";
-import { Card, Progress } from "antd";
-import { useSession } from "next-auth/client";
-import React from "react";
+import { Monster, Player, Weapon } from '@prisma/client';
+import { Card, Progress } from 'antd';
+import { useSession } from 'next-auth/client';
+import React, { useState } from 'react';
 
 interface IMonsterCardProps {
   monster: Monster;
+  hit: number;
 }
 
-const MonsterCard = ({ monster }: IMonsterCardProps) => {
+const MonsterCard = ({ monster, hit }: IMonsterCardProps) => {
   const [session, loading] = useSession();
 
+  if (!monster) return null;
   if (!loading && !session) return null;
 
   const calculatePercentHealth = (cur: number, max: number) => {
@@ -18,6 +20,7 @@ const MonsterCard = ({ monster }: IMonsterCardProps) => {
     return result;
   };
 
+
   return (
     <React.Fragment>
       <Card
@@ -25,8 +28,8 @@ const MonsterCard = ({ monster }: IMonsterCardProps) => {
         style={{
           width: 300,
           height: 300,
-          display: "flex",
-          flexDirection: "column",
+          display: 'flex',
+          flexDirection: 'column',
         }}
         loading={loading}
       >
@@ -35,16 +38,25 @@ const MonsterCard = ({ monster }: IMonsterCardProps) => {
           Health: {monster.health} / {monster.maxHealth}
         </p>
         {monster.health > 0 ? (
-             <Progress
-             percent={calculatePercentHealth(monster.health, monster.maxHealth)}
-             type="line"
-             showInfo={false}
-             status={calculatePercentHealth(monster.health, monster.maxHealth) <= 30 ? "exception" : "success"}
-           />
+          <div>
+            <Progress
+              percent={calculatePercentHealth(
+                monster.health,
+                monster.maxHealth
+              )}
+              type="line"
+              showInfo={false}
+              status={
+                calculatePercentHealth(monster.health, monster.maxHealth) <= 30
+                  ? 'exception'
+                  : 'success'
+              }
+            />
+            {hit}
+          </div>
         ) : (
-            <p>Dead</p>
+          <p>Dead</p>
         )}
-       
       </Card>
     </React.Fragment>
   );

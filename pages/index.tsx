@@ -1,11 +1,10 @@
-import { Monster } from "@prisma/client";
-import { message, Button, Row, Col } from "antd";
-import { getSession, useSession } from "next-auth/client";
-import React, { useState } from "react";
-import Header from "../components/Header";
-import MonsterCard from "../components/MonsterCard";
-import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
-import prisma from "../lib/prisma";
+import { Monster } from '@prisma/client';
+import { Button, Col, Layout, message, Row } from 'antd';
+import { getSession, useSession } from 'next-auth/client';
+import React, { useState } from 'react';
+import MonsterCard from '../components/MonsterCard';
+import PlayerCard, { IFullPlayer } from '../components/PlayerCard';
+import prisma from '../lib/prisma';
 
 export enum STATSMULTIPLIERS {
   STR = 0.255,
@@ -16,25 +15,23 @@ function HomePage(props) {
   const [session, loading] = useSession();
   const [fullPlayer, setFullPlayer] = useState<IFullPlayer>(props.fullPlayer);
   const [monster, setMonster] = useState<Monster>(props.monster);
+  const [playerHit, setPlayerHit] = useState<number>(null);
+  const [monsterHit, setMonsterHit] = useState<number>(null);
 
   if (!loading && !session)
     return (
       <React.Fragment>
-        <Header />
         <p>Access Denied</p>
       </React.Fragment>
     );
 
   const savePlayer = async () => {
     await fetch(`http://localhost:3000/api/player/${fullPlayer.player.id}`, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(fullPlayer.player),
     }).then((response) => {
-      console.log(response)
-      message.info(
-        `You killed ${monster.name} and gained ${monster.experience} experience`
-      );
-    })
+      console.log(response);
+    });
   };
 
   const playerWin = () => {
@@ -60,32 +57,60 @@ function HomePage(props) {
       });
     }
 
-
+    setPlayerHit(null);
+    setMonsterHit(null);
     // Saves the local obj to the backend;
     savePlayer();
+    message.info(
+      `You killed the ${monster.name} and gained ${monster.experience} experience`
+    );
+  };
+
+  const playerLose = () => {
+    const lostExp =  Math.round((fullPlayer.player.experience /
+      fullPlayer.player.experienceToLevelUp) *
+    100);
+    // Player lost
+    // penelty
+    setFullPlayer({
+      equipement: fullPlayer.equipement,
+      player: {
+        ...fullPlayer.player,
+        experience: (fullPlayer.player.experience -= lostExp)
+      },
+    });
+
+    setPlayerHit(null);
+    setMonsterHit(null);
+    // Saves the local obj to the backend;
+    savePlayer();
+    message.error(
+      `You died to the ${monster.name} and lost ${monster.experience} experience`
+    );
   };
 
   const doPlayerAttack = () => {
     const attackSpeed = 2000;
-    const calculatedTotalDamage =
-      fullPlayer.player.strength * STATSMULTIPLIERS.STR +
-      fullPlayer.equipement.weapon.maxDamage;
-    const calculatedMinimumDamage =
-      fullPlayer.player.strength * STATSMULTIPLIERS.STR +
-      fullPlayer.equipement.weapon.minDamage;
-
-    const upcomingHit = Math.floor(
-      Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
-        calculatedMinimumDamage
-    );
 
     const fight = setInterval(() => {
+      const calculatedTotalDamage =
+        fullPlayer.player.strength * STATSMULTIPLIERS.STR +
+        fullPlayer.equipement.weapon.maxDamage;
+      const calculatedMinimumDamage =
+        fullPlayer.player.strength * STATSMULTIPLIERS.STR +
+        fullPlayer.equipement.weapon.minDamage;
+
+      const upcomingHit = Math.floor(
+        Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
+          calculatedMinimumDamage
+      );
       if (monster.health > 0 && fullPlayer.player.health > 0) {
+        setPlayerHit(upcomingHit);
         setMonster({
           ...monster,
           health: (monster.health -= upcomingHit),
         });
-      } else {
+      } else if (monster.health <= 0) {
         playerWin();
         setMonster({
           ...monster,
@@ -98,13 +123,15 @@ function HomePage(props) {
 
   const doMonsterAttack = () => {
     const attackSpeed = 2000;
-    const upcomingHit = Math.floor(
-      Math.random() * (monster.maxDamage - monster.minDamage) +
-        monster.minDamage
-    );
 
     const fight = setInterval(() => {
+      const upcomingHit = Math.floor(
+        Math.random() * (monster.maxDamage - monster.minDamage) +
+          monster.minDamage
+      );
+
       if (fullPlayer.player.health > 0 && monster.health > 0) {
+        setMonsterHit(upcomingHit);
         setFullPlayer({
           equipement: fullPlayer.equipement,
           player: {
@@ -120,7 +147,7 @@ function HomePage(props) {
             health: (fullPlayer.player.health = 0),
           },
         });
-        savePlayer();
+        playerLose();
         clearInterval(fight);
       }
     }, attackSpeed);
@@ -130,18 +157,19 @@ function HomePage(props) {
     if (fullPlayer.player.health > 0) {
       doPlayerAttack();
       doMonsterAttack();
+    } else {
+      message.error('You are dead');
     }
   };
 
   return (
     <React.Fragment>
-      <Header />
       <Row>
         <Col span={12}>
-          <PlayerCard fullPlayer={fullPlayer} />
+          <PlayerCard fullPlayer={fullPlayer} hit={monsterHit} />
         </Col>
         <Col span={12}>
-          <MonsterCard monster={monster} />
+          <MonsterCard monster={monster} hit={playerHit} />
         </Col>
       </Row>
 
@@ -171,7 +199,9 @@ export const getServerSideProps = async (context) => {
       },
     };
 
-    const monster = await prisma.monster?.findFirst();
+    const monster = await prisma.monster?.findFirst({
+      where: { id: 10 },
+    });
 
     return { props: { fullPlayer, monster } };
   } else {
