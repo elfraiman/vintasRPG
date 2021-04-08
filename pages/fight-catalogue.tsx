@@ -3,7 +3,7 @@ import { getSession, useSession } from "next-auth/client";
 import { Monster } from "@prisma/client";
 import React from "react";
 import MonsterCard from "../components/MonsterCard";
-import { Row } from "antd";
+import { Col, Row } from "antd";
 // index.tsx
 
 interface IFightCatalogueProps {
@@ -19,14 +19,19 @@ const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
         <p>Access Denied</p>
       </React.Fragment>
     );
-
-  console.log(monsters, "props");
-
+  const sortedMonsters = monsters.sort((a, b) => (a.level > b.level ? 1 : -1));
   return (
     <React.Fragment>
       <Row>
-        {monsters.map((monster) => {
-          return <MonsterCard monster={monster} showAttack={true} key={monster.id} />;
+        <h2>Known Monsters</h2>
+      </Row>
+      <Row>
+        {sortedMonsters.map((monster) => {
+          return (
+            <Col key={monster.id} span={8}>
+              <MonsterCard monster={monster} showAttack={true} />
+            </Col>
+          );
         })}
       </Row>
     </React.Fragment>

@@ -200,6 +200,9 @@ function FightPage(props) {
   return (
     <React.Fragment>
       <Row>
+        <h2>Combat</h2>
+      </Row>
+      <Row>
         <Col span={12}>
           <PlayerCard fullPlayer={fullPlayer} hit={monsterHit} />
         </Col>
