@@ -1,14 +1,17 @@
-import { Monster, Player, Weapon } from '@prisma/client';
-import { Card, Progress } from 'antd';
-import { useSession } from 'next-auth/client';
-import React, { useState } from 'react';
+import { Monster, Player, Weapon } from "@prisma/client";
+import { Button, Card, Progress } from "antd";
+import { useSession } from "next-auth/client";
+import React, { useState } from "react";
+import { useRouter } from 'next/router'
 
 interface IMonsterCardProps {
   monster: Monster;
-  hit: number;
+  hit?: number;
+  showAttack?: boolean;
 }
 
-const MonsterCard = ({ monster, hit }: IMonsterCardProps) => {
+const MonsterCard = ({ monster, hit, showAttack }: IMonsterCardProps) => {
+  const router = useRouter();
   const [session, loading] = useSession();
 
   if (!monster) return null;
@@ -20,6 +23,9 @@ const MonsterCard = ({ monster, hit }: IMonsterCardProps) => {
     return result;
   };
 
+  const handleAttack = () => {
+    router.push({pathname: "/fight", query: {monsterId: monster.id}})
+  }
 
   return (
     <React.Fragment>
@@ -28,8 +34,8 @@ const MonsterCard = ({ monster, hit }: IMonsterCardProps) => {
         style={{
           width: 300,
           height: 300,
-          display: 'flex',
-          flexDirection: 'column',
+          display: "flex",
+          flexDirection: "column",
         }}
         loading={loading}
       >
@@ -48,8 +54,8 @@ const MonsterCard = ({ monster, hit }: IMonsterCardProps) => {
               showInfo={false}
               status={
                 calculatePercentHealth(monster.health, monster.maxHealth) <= 30
-                  ? 'exception'
-                  : 'success'
+                  ? "exception"
+                  : "success"
               }
             />
             {hit}
@@ -57,6 +63,7 @@ const MonsterCard = ({ monster, hit }: IMonsterCardProps) => {
         ) : (
           <p>Dead</p>
         )}
+        {showAttack ? <Button onClick={handleAttack}>Attack</Button> : <></>}
       </Card>
     </React.Fragment>
   );
