@@ -1,26 +1,34 @@
 // Header.tsx
-import React from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { signOut, useSession } from 'next-auth/client';
-import { Button, Layout, Menu } from 'antd';
+import React from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { signOut, useSession } from "next-auth/client";
+import { Button, Layout, Menu } from "antd";
+import { IFullPlayer } from "./PlayerCard";
 
 const { Header } = Layout;
 
-const HeaderComponent = (props) => {
+interface IHeaderComponentProps {
+  fullPlayer: IFullPlayer;
+}
+
+const HeaderComponent = ({ fullPlayer }: IHeaderComponentProps) => {
+  console.log(fullPlayer);
+
   const router = useRouter();
   const isActive: (pathname: string) => boolean = (pathname) =>
-    router.pathname === pathname
+    router.pathname === pathname;
   const [session, loading] = useSession();
 
   let right = null;
+  let left = null;
 
   if (!session) {
     right = (
       <div className="right">
         <Button>
           <Link href="/api/auth/signin">
-            <a data-active={isActive('/signup')}>Log in</a>
+            <a data-active={isActive("/signup")}>Log in</a>
           </Link>
         </Button>
         <style jsx>{`
@@ -61,17 +69,33 @@ const HeaderComponent = (props) => {
     );
   }
 
+  if (fullPlayer && session) {
+    left = (
+      <div className="left">
+        {fullPlayer.player.name}
+
+        <style jsx>{`
+          .left {
+            margin-right: auto;
+            color: white;
+          }
+          `}</style>
+      </div>
+    );
+  }
+
   return (
     <Header
       className="ant-layout-header"
       style={{
-        padding: '1rem',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        height: '80px',
+        padding: "1rem",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        height: "80px",
       }}
     >
+      {left}
       {right}
     </Header>
   );

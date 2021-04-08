@@ -33,7 +33,7 @@ export const getServerSideProps = async (context) => {
 
 const HomePage = (props) => {
   return (
-    <SiteLayout>
+    <SiteLayout fullPlayer={props.fullPlayer}>
       <Row>
         <h2>Home</h2>
       </Row>
