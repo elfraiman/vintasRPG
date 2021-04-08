@@ -12,7 +12,7 @@ export interface IFullPlayer {
 
 interface IPlayerCardProps {
   fullPlayer: IFullPlayer;
-  hit: number;
+  hit?: number;
 }
 
 const PlayerCard = ({ fullPlayer, hit }: IPlayerCardProps) => {
