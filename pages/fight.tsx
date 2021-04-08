@@ -6,7 +6,7 @@ import MonsterCard from "../components/MonsterCard";
 import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
 import SiteLayout from "../components/SiteLayout";
 import prisma from "../lib/prisma";
-import {cloneDeep} from 'lodash';
+import { cloneDeep } from "lodash";
 
 export enum STATSMULTIPLIERS {
   STR = 0.255,
@@ -49,12 +49,15 @@ export const getServerSideProps = async (context) => {
 
 function FightPage(props) {
   const [session, loading] = useSession();
-  const [fullPlayer, setFullPlayer] = useState<IFullPlayer>(cloneDeep(props.fullPlayer));
+  const [fullPlayer, setFullPlayer] = useState<IFullPlayer>(
+    cloneDeep(props.fullPlayer)
+  );
   const [monster, setMonster] = useState<Monster>(cloneDeep(props.monster));
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [fightStarted, setFightStarted] = useState<boolean>(false);
 
   let battleLogContainer = [];
+
   let dummyRef = useRef(null);
 
   if (!loading && !session)
@@ -104,14 +107,13 @@ function FightPage(props) {
     setFightStarted(false);
 
     battleLogContainer.push([
-      ...battleLog,
       <span>
         You have killed the {monster.name} and gained{" "}
         <span style={{ color: "#1890ff" }}>{monster.experience}</span>{" "}
         experience
       </span>,
     ]);
-    setBattleLog([...battleLogContainer]);
+    setBattleLog(battleLogContainer);
     message.info(
       `You killed the ${monster.name} and gained ${monster.experience} experience`
     );
@@ -148,14 +150,13 @@ function FightPage(props) {
     setFightStarted(false);
 
     battleLogContainer.push([
-      ...battleLog,
       <span>
         You <b>died</b> to {monster.name} and lost{" "}
         <span style={{ color: "#1890ff" }}>{monster.experience}</span>{" "}
         experience
       </span>,
     ]);
-    setBattleLog([...battleLogContainer]);
+    setBattleLog(battleLogContainer);
     message.error(
       `You died to the ${monster.name} and lost ${monster.experience} experience`
     );
@@ -167,22 +168,20 @@ function FightPage(props) {
   ) => {
     if (playerOrMonster === "player") {
       battleLogContainer.push([
-        ...battleLog,
         <span>
           You hit the {monster.name} for
           <span style={{ color: "green" }}> {dmg}</span> damage.
         </span>,
       ]);
-      setBattleLog([...battleLogContainer]);
+      setBattleLog(battleLogContainer);
     } else if (playerOrMonster === "monster") {
       battleLogContainer.push([
-        ...battleLog,
         <span>
           The {monster.name} hit you for
           {<span style={{ color: "red" }}> {dmg}</span>} damage.
         </span>,
       ]);
-      setBattleLog([...battleLogContainer]);
+      setBattleLog(battleLogContainer);
     }
   };
 
@@ -257,12 +256,15 @@ function FightPage(props) {
   };
 
   const startReFight = () => {
-    setMonster(props.monster);
+    setMonster({
+      ...props.monster,
+      health: (monster.health += monster.maxHealth - monster.health),
+    });
+    battleLogContainer = [];
     setBattleLog([]);
-    
-    console.log(monster, props.monster, 'props');
+
     startFight();
-  }
+  };
 
   const startFight = () => {
     if (fullPlayer.player.health > 0 && monster.health > 0) {
