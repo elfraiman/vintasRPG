@@ -29,7 +29,7 @@ const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
         {sortedMonsters.map((monster) => {
           return (
             <Col key={monster.id} span={8}>
-              <MonsterCard monster={monster} showAttack={true} />
+              <MonsterCard monster={monster} showAttack={true} hideHpBar={true} />
             </Col>
           );
         })}

@@ -12,10 +12,9 @@ export interface IFullPlayer {
 
 interface IPlayerCardProps {
   fullPlayer: IFullPlayer;
-  hit?: number;
 }
 
-const PlayerCard = ({ fullPlayer, hit }: IPlayerCardProps) => {
+const PlayerCard = ({ fullPlayer }: IPlayerCardProps) => {
   const [session, loading] = useSession();
   let equipement;
   let player: Player;
@@ -44,7 +43,7 @@ const PlayerCard = ({ fullPlayer, hit }: IPlayerCardProps) => {
         title={player.name}
         style={{
           width: 300,
-          minHeight: 300,
+          minHeight: 350,
           display: "flex",
           flexDirection: "column",
         }}
@@ -73,7 +72,6 @@ const PlayerCard = ({ fullPlayer, hit }: IPlayerCardProps) => {
               : "success"
           }
         />
-        {hit}
         <p>
           {equipement.weapon.name} ({equipement.weapon.minDamage}-
           {equipement.weapon.maxDamage})

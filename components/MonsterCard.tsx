@@ -2,15 +2,19 @@ import { Monster, Player, Weapon } from "@prisma/client";
 import { Button, Card, Progress } from "antd";
 import { useSession } from "next-auth/client";
 import React, { useState } from "react";
-import { useRouter } from 'next/router'
-
+import { useRouter } from "next/router";
+import Image from "next/image";
 interface IMonsterCardProps {
   monster: Monster;
-  hit?: number;
   showAttack?: boolean;
+  hideHpBar?: boolean;
 }
 
-const MonsterCard = ({ monster, hit, showAttack }: IMonsterCardProps) => {
+const MonsterCard = ({
+  monster,
+  showAttack,
+  hideHpBar,
+}: IMonsterCardProps) => {
   const router = useRouter();
   const [session, loading] = useSession();
 
@@ -24,8 +28,8 @@ const MonsterCard = ({ monster, hit, showAttack }: IMonsterCardProps) => {
   };
 
   const handleAttack = () => {
-    router.push({pathname: "/fight", query: {monsterId: monster.id}})
-  }
+    router.push({ pathname: "/fight", query: { monsterId: monster.id } });
+  };
 
   return (
     <React.Fragment>
@@ -33,17 +37,38 @@ const MonsterCard = ({ monster, hit, showAttack }: IMonsterCardProps) => {
         title={monster.name}
         style={{
           width: 300,
-          height: 300,
+          height: 350,
           display: "flex",
           flexDirection: "column",
         }}
         loading={loading}
       >
+        <span
+          style={{
+            display: "flex",
+            width: "100%",
+            justifyContent: "center",
+            marginBottom: 16,
+          }}
+        >
+          <Image
+            src={`/assets/icons/monster-${monster.id}.svg`}
+            width={120}
+            height={120}
+          />
+        </span>
         <p> Level: {monster.level}</p>
-        <p style={{ marginBottom: 0 }}>
-          Health: {monster.health} / {monster.maxHealth}
-        </p>
-        {monster.health > 0 ? (
+
+        <React.Fragment>
+          {monster.health > 0 ? (
+            <p style={{ marginBottom: 0 }}>
+              Health: {monster.health} / {monster.maxHealth}
+            </p>
+          ) : (
+            <h4>Dead</h4>
+          )}
+        </React.Fragment>
+        {monster.health > 0 && !hideHpBar ? (
           <div>
             <Progress
               percent={calculatePercentHealth(
@@ -58,12 +83,17 @@ const MonsterCard = ({ monster, hit, showAttack }: IMonsterCardProps) => {
                   : "success"
               }
             />
-            {hit}
           </div>
         ) : (
-          <p>Dead</p>
+          <></>
         )}
-        {showAttack ? <Button onClick={handleAttack}>Attack</Button> : <></>}
+        {showAttack ? (
+          <Button style={{ marginTop: 16 }} onClick={handleAttack}>
+            Attack
+          </Button>
+        ) : (
+          <></>
+        )}
       </Card>
     </React.Fragment>
   );

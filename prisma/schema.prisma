@@ -92,6 +92,7 @@ model Monster {
   name               String? @unique
   health             Int
   maxHealth          Int @default(10)
+  attackSpeed        Int @default(2)
   armor              Int
   damageReduction    Int
   evasion            Int
