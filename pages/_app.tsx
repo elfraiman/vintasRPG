@@ -23,7 +23,7 @@ const App = ({ Component, pageProps }: AppProps) => {
         <Sider trigger={null} collapsible collapsed={collapsed}>
           <div className="logo" />
           <Menu theme="dark" mode="inline">
-            <Menu.Item key="1" style={{ display: "flex" }} onClick={() => router.push('/')} isSelected={isActive('/')}>
+            <Menu.Item key="1" style={{ display: "flex" }} onClick={() => router.push('/')} isSelected={isActive('')}>
               <Image src="/assets/icons/home.svg" height={25} width={25} />
               <span style={{ marginLeft: 16 }}>Home</span>
             </Menu.Item>
@@ -38,6 +38,10 @@ const App = ({ Component, pageProps }: AppProps) => {
             <Menu.Item key="4" style={{ display: "flex" }} isSelected={isActive('/market')}>
               <Image src="/assets/icons/market.svg" height={25} width={25} />
               <span style={{ marginLeft: 16 }}>Market</span>
+            </Menu.Item>
+            <Menu.Item key="5" style={{ display: "flex" }} onClick={() => router.push('/church')} isSelected={isActive('/church')} >
+              <Image src="/assets/icons/church.svg" height={25} width={25} />
+              <span style={{ marginLeft: 16 }}>Church</span>
             </Menu.Item>
           </Menu>
         </Sider>

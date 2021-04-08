@@ -5,7 +5,7 @@ import prisma from "../../../lib/prisma";
 // PUT /api/publish/:id
 export default async function handle(req, res) {
   const player = JSON.parse(req.body);
-
+  console.log(player, 'player in call')
   prisma.player
     .update({
       where: { userId: parseInt(req.query.id, 10) },

@@ -21,6 +21,9 @@ function HomePage(props) {
   return (
     <React.Fragment>
       <Row>
+        <h2>Home</h2>
+      </Row>
+      <Row>
         <Col span={24}>
           <PlayerCard fullPlayer={fullPlayer} />
         </Col>

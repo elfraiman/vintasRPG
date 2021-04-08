@@ -1,21 +1,19 @@
-import { Monster } from '@prisma/client';
-import { Button, Col, Layout, message, Row } from 'antd';
-import { getSession, useSession } from 'next-auth/client';
-import React, { useState } from 'react';
-import MonsterCard from '../components/MonsterCard';
-import PlayerCard, { IFullPlayer } from '../components/PlayerCard';
-import prisma from '../lib/prisma';
-import { useRouter } from 'next/router'
+import { Monster } from "@prisma/client";
+import { Button, Col, message, Row } from "antd";
+import { getSession, useSession } from "next-auth/client";
+import React, { useState } from "react";
+import MonsterCard from "../components/MonsterCard";
+import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
+import prisma from "../lib/prisma";
 
 export enum STATSMULTIPLIERS {
   STR = 0.255,
   DEX = 0.125,
 }
 
-
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
-  console.log(context.query, 'query')
+  console.log(context.query, "query");
   if (session) {
     const player = await prisma.player?.findFirst({
       where: { userId: session?.userId },
@@ -33,10 +31,8 @@ export const getServerSideProps = async (context) => {
       },
     };
 
- 
-
     const monster = await prisma.monster?.findFirst({
-      where: { id: parseInt(context.query.monsterId, 10)},
+      where: { id: parseInt(context.query.monsterId, 10) },
     });
 
     return { props: { fullPlayer, monster } };
@@ -44,7 +40,6 @@ export const getServerSideProps = async (context) => {
     return { props: {} };
   }
 };
-
 
 function FightPage(props) {
   const [session, loading] = useSession();
@@ -62,7 +57,7 @@ function FightPage(props) {
 
   const savePlayer = async () => {
     await fetch(`http://localhost:3000/api/player/${fullPlayer.player.id}`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(fullPlayer.player),
     }).then((response) => {
       console.log(response);
@@ -102,16 +97,17 @@ function FightPage(props) {
   };
 
   const playerLose = () => {
-    const lostExp =  Math.round((fullPlayer.player.experience /
-      fullPlayer.player.experienceToLevelUp) *
-    100);
+    const lostExp = Math.round(
+      (fullPlayer.player.experience / fullPlayer.player.experienceToLevelUp) *
+        100
+    );
     // Player lost
     // penelty
     setFullPlayer({
       equipement: fullPlayer.equipement,
       player: {
         ...fullPlayer.player,
-        experience: (fullPlayer.player.experience -= lostExp)
+        experience: (fullPlayer.player.experience -= lostExp),
       },
     });
 
@@ -193,7 +189,7 @@ function FightPage(props) {
       doPlayerAttack();
       doMonsterAttack();
     } else {
-      message.error('You are dead');
+      message.error("You are dead");
     }
   };
 
@@ -215,6 +211,5 @@ function FightPage(props) {
     </React.Fragment>
   );
 }
-
 
 export default FightPage;
