@@ -5,11 +5,46 @@ import React, { useState } from 'react';
 import MonsterCard from '../components/MonsterCard';
 import PlayerCard, { IFullPlayer } from '../components/PlayerCard';
 import prisma from '../lib/prisma';
+import { useRouter } from 'next/router'
 
 export enum STATSMULTIPLIERS {
   STR = 0.255,
   DEX = 0.125,
 }
+
+
+export const getServerSideProps = async (context) => {
+  const session = await getSession(context);
+  console.log(context.query, 'query')
+  if (session) {
+    const player = await prisma.player?.findFirst({
+      where: { userId: session?.userId },
+    });
+
+    const fullPlayer: IFullPlayer = {
+      player: player,
+      equipement: {
+        weapon: await prisma.player
+          ?.findFirst({
+            where: { userId: session?.userId },
+          })
+          .inventory()
+          .weapon(),
+      },
+    };
+
+ 
+
+    const monster = await prisma.monster?.findFirst({
+      where: { id: parseInt(context.query.monsterId, 10)},
+    });
+
+    return { props: { fullPlayer, monster } };
+  } else {
+    return { props: {} };
+  }
+};
+
 
 function FightPage(props) {
   const [session, loading] = useSession();
@@ -178,35 +213,5 @@ function FightPage(props) {
   );
 }
 
-// index.tsx
-export const getServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  if (session) {
-    const player = await prisma.player?.findFirst({
-      where: { userId: session?.userId },
-    });
-
-    const fullPlayer: IFullPlayer = {
-      player: player,
-      equipement: {
-        weapon: await prisma.player
-          ?.findFirst({
-            where: { userId: session?.userId },
-          })
-          .inventory()
-          .weapon(),
-      },
-    };
-
-    const monster = await prisma.monster?.findFirst({
-      where: { id: 10 },
-    });
-
-    return { props: { fullPlayer, monster } };
-  } else {
-    return { props: {} };
-  }
-};
 
 export default FightPage;

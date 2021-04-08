@@ -23,7 +23,7 @@ const App = ({ Component, pageProps }: AppProps) => {
               <Image src="/assets/icons/home.svg" height={25} width={25} />
               <span style={{ marginLeft: 16 }}>Home</span>
             </Menu.Item>
-            <Menu.Item key="2" style={{ display: "flex" }} onClick={() => router.push('/fight')}>
+            <Menu.Item key="2" style={{ display: "flex" }} onClick={() => router.push('/fight-catalogue')}>
               <Image src="/assets/icons/swords.svg" height={25} width={25} />
               <span style={{ marginLeft: 16 }}>Combat</span>
             </Menu.Item>
