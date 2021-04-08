@@ -6,7 +6,8 @@ import { signOut, useSession } from 'next-auth/client';
 import { Button, Layout, Menu } from 'antd';
 
 const { Header } = Layout;
-const HeaderComponent: React.FC = () => {
+
+const HeaderComponent = (props) => {
   const router = useRouter();
   const isActive: (pathname: string) => boolean = (pathname) =>
     router.pathname === pathname

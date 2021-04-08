@@ -4,11 +4,17 @@ import { getSession, useSession } from "next-auth/client";
 import React, { useEffect, useRef, useState } from "react";
 import MonsterCard from "../components/MonsterCard";
 import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
+import SiteLayout from "../components/SiteLayout";
 import prisma from "../lib/prisma";
+import {cloneDeep} from 'lodash';
 
 export enum STATSMULTIPLIERS {
   STR = 0.255,
   DEX = 0.125,
+}
+
+export enum MULTIPLIERS {
+  LEVELUPEXPMULTIPLIER = 1.85,
 }
 
 export const getServerSideProps = async (context) => {
@@ -43,9 +49,11 @@ export const getServerSideProps = async (context) => {
 
 function FightPage(props) {
   const [session, loading] = useSession();
-  const [fullPlayer, setFullPlayer] = useState<IFullPlayer>(props.fullPlayer);
-  const [monster, setMonster] = useState<Monster>(props.monster);
+  const [fullPlayer, setFullPlayer] = useState<IFullPlayer>(cloneDeep(props.fullPlayer));
+  const [monster, setMonster] = useState<Monster>(cloneDeep(props.monster));
   const [battleLog, setBattleLog] = useState<string[]>([]);
+  const [fightStarted, setFightStarted] = useState<boolean>(false);
+
   let battleLogContainer = [];
   let dummyRef = useRef(null);
 
@@ -84,16 +92,23 @@ function FightPage(props) {
         player: {
           ...fullPlayer.player,
           level: (fullPlayer.player.level += 1),
+          experienceToLevelUp:
+            fullPlayer.player.experienceToLevelUp *
+            MULTIPLIERS.LEVELUPEXPMULTIPLIER,
+          experience: 0,
         },
       });
     }
     // Saves the local obj to the backend;
     savePlayer();
+    setFightStarted(false);
+
     battleLogContainer.push([
       ...battleLog,
       <span>
         You have killed the {monster.name} and gained{" "}
-        <span style={{ color: "#1890ff" }}>{monster.experience}</span> experience
+        <span style={{ color: "#1890ff" }}>{monster.experience}</span>{" "}
+        experience
       </span>,
     ]);
     setBattleLog([...battleLogContainer]);
@@ -130,11 +145,14 @@ function FightPage(props) {
 
     // Saves the local obj to the backend;
     savePlayer();
+    setFightStarted(false);
+
     battleLogContainer.push([
       ...battleLog,
       <span>
         You <b>died</b> to {monster.name} and lost{" "}
-        <span style={{ color: "#1890ff" }}>{monster.experience}</span> experience
+        <span style={{ color: "#1890ff" }}>{monster.experience}</span>{" "}
+        experience
       </span>,
     ]);
     setBattleLog([...battleLogContainer]);
@@ -180,6 +198,11 @@ function FightPage(props) {
     const attackSpeed = 2000;
 
     const fight = setInterval(() => {
+      if (monster.health <= 0) {
+        playerWin();
+        clearInterval(fight);
+      }
+
       const calculatedTotalDamage =
         fullPlayer.player.strength * STATSMULTIPLIERS.STR +
         fullPlayer.equipement.weapon.maxDamage;
@@ -197,15 +220,24 @@ function FightPage(props) {
           ...monster,
           health: (monster.health -= upcomingHit),
         });
-      } else if (monster.health <= 0) {
-        playerWin();
-        clearInterval(fight);
       }
     }, attackSpeed);
   };
 
   const doMonsterAttack = () => {
     const fight = setInterval(() => {
+      if (fullPlayer.player.health <= 0) {
+        setFullPlayer({
+          equipement: fullPlayer.equipement,
+          player: {
+            ...fullPlayer.player,
+            health: (fullPlayer.player.health = 0),
+          },
+        });
+        playerLose();
+        clearInterval(fight);
+      }
+
       const upcomingHit = Math.floor(
         Math.random() * (monster.maxDamage - monster.minDamage) +
           monster.minDamage
@@ -220,31 +252,34 @@ function FightPage(props) {
             health: (fullPlayer.player.health -= upcomingHit),
           },
         });
-      } else if (fullPlayer.player.health <= 0) {
-        setFullPlayer({
-          equipement: fullPlayer.equipement,
-          player: {
-            ...fullPlayer.player,
-            health: (fullPlayer.player.health = 0),
-          },
-        });
-        playerLose();
-        clearInterval(fight);
       }
     }, monster.attackSpeed * 1000);
   };
 
+  const startReFight = () => {
+    setMonster(props.monster);
+    setBattleLog([]);
+    
+    console.log(monster, props.monster, 'props');
+    startFight();
+  }
+
   const startFight = () => {
-    if (fullPlayer.player.health > 0) {
+    if (fullPlayer.player.health > 0 && monster.health > 0) {
       doPlayerAttack();
       doMonsterAttack();
+      setFightStarted(true);
+      return;
+    } else if (monster.health < 0) {
+      message.error("You can't kill what is already dead.");
     } else {
-      message.error("You are dead");
+      message.error("You are dead.");
     }
+    setFightStarted(false);
   };
 
   return (
-    <React.Fragment>
+    <SiteLayout>
       <Row>
         <h2>Combat</h2>
       </Row>
@@ -253,21 +288,35 @@ function FightPage(props) {
           <PlayerCard fullPlayer={fullPlayer} />
         </Col>
         <Col span={8}>
-          <Card style={{ height: 350, width: 300, overflowY: "hidden", padding: 16 }}>
+          <Card
+            style={{
+              height: 350,
+              width: 300,
+              overflowY: "hidden",
+              padding: 16,
+            }}
+          >
             {battleLog.map((val, i) => (
-              <Row key={i++}>{val}</Row>
+              <Row key={i}>{val}</Row>
             ))}
 
             <div ref={dummyRef}></div>
           </Card>
+          <Row style={{ marginTop: 16 }}>
+            {fightStarted ? (
+              <Button>Run</Button>
+            ) : monster.health <= 0 ? (
+              <Button onClick={startReFight}>Fight Again</Button>
+            ) : (
+              <Button onClick={startFight}>Fight</Button>
+            )}
+          </Row>
         </Col>
         <Col span={8}>
           <MonsterCard monster={monster} />
         </Col>
       </Row>
-
-      <Button onClick={startFight}> fight </Button>
-    </React.Fragment>
+    </SiteLayout>
   );
 }
 

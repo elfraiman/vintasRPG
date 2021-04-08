@@ -4,6 +4,7 @@ import { Monster } from "@prisma/client";
 import React from "react";
 import MonsterCard from "../components/MonsterCard";
 import { Col, Row } from "antd";
+import SiteLayout from "../components/SiteLayout";
 // index.tsx
 
 interface IFightCatalogueProps {
@@ -21,7 +22,7 @@ const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
     );
   const sortedMonsters = monsters.sort((a, b) => (a.level > b.level ? 1 : -1));
   return (
-    <React.Fragment>
+    <SiteLayout>
       <Row>
         <h2>Known Monsters</h2>
       </Row>
@@ -34,7 +35,7 @@ const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
           );
         })}
       </Row>
-    </React.Fragment>
+    </SiteLayout>
   );
 };
 

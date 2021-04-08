@@ -5,6 +5,7 @@ import { getSession, useSession } from "next-auth/client";
 import prisma from "../lib/prisma";
 import { IFullPlayer } from "../components/PlayerCard";
 import { Player } from "@prisma/client";
+import SiteLayout from "../components/SiteLayout";
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
@@ -38,7 +39,7 @@ const ChurchPage = (props) => {
       // Heal player to his max health
       setPlayer({
         ...player,
-        health: (player.health += player.maxHealth) - player.health,
+        health: (player.health += player.maxHealth - player.health),
       });
 
       savePlayer();
@@ -75,7 +76,7 @@ const ChurchPage = (props) => {
   };
 
   return (
-    <React.Fragment>
+    <SiteLayout>
       <Row>
         <h2>Church</h2>
       </Row>
@@ -103,7 +104,7 @@ const ChurchPage = (props) => {
           </Row>
         </Card>
       </Row>
-    </React.Fragment>
+    </SiteLayout>
   );
 };
 

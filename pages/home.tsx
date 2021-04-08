@@ -1,11 +1,10 @@
-import { getSession, useSession } from "next-auth/client";
-import React, { useState } from "react";
-import { IFullPlayer } from "../components/PlayerCard";
+import { Col, Row } from "antd";
+import { getSession } from "next-auth/client";
+import React from "react";
+import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
 import SiteLayout from "../components/SiteLayout";
 import prisma from "../lib/prisma";
 
-
-// index.tsx
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
 
@@ -32,24 +31,19 @@ export const getServerSideProps = async (context) => {
   }
 };
 
-function HomePage(props) {
-  const [session, loading] = useSession();
-  const [fullPlayer] = useState<IFullPlayer>(props.fullPlayer);
-
-  if (!loading && !session)
-    return (
-      <React.Fragment>
-        <p>Access Denied</p>
-      </React.Fragment>
-    );
-
+const HomePage = (props) => {
   return (
     <SiteLayout>
-    <React.Fragment>
-    
-    </React.Fragment>
+      <Row>
+        <h2>Home</h2>
+      </Row>
+      <Row>
+        <Col span={24}>
+          <PlayerCard fullPlayer={props.fullPlayer} />
+        </Col>
+      </Row>
     </SiteLayout>
   );
-}
+};
 
 export default HomePage;
