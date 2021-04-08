@@ -105,15 +105,14 @@ function FightPage(props) {
     // Saves the local obj to the backend;
     savePlayer();
     setFightStarted(false);
-
-    battleLogContainer.push([
+    setBattleLog([
+      ...battleLogContainer,
       <span>
         You have killed the {monster.name} and gained{" "}
         <span style={{ color: "#1890ff" }}>{monster.experience}</span>{" "}
         experience
       </span>,
     ]);
-    setBattleLog(battleLogContainer);
     message.info(
       `You killed the ${monster.name} and gained ${monster.experience} experience`
     );
@@ -149,14 +148,14 @@ function FightPage(props) {
     savePlayer();
     setFightStarted(false);
 
-    battleLogContainer.push([
+    setBattleLog([
+      ...battleLogContainer,
       <span>
         You <b>died</b> to {monster.name} and lost{" "}
         <span style={{ color: "#1890ff" }}>{monster.experience}</span>{" "}
         experience
       </span>,
     ]);
-    setBattleLog(battleLogContainer);
     message.error(
       `You died to the ${monster.name} and lost ${monster.experience} experience`
     );
@@ -213,6 +212,7 @@ function FightPage(props) {
         Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
           calculatedMinimumDamage
       );
+
       if (monster.health > 0 && fullPlayer.player.health > 0) {
         handleBattleLog("player", upcomingHit);
         setMonster({
@@ -260,13 +260,13 @@ function FightPage(props) {
       ...props.monster,
       health: (monster.health += monster.maxHealth - monster.health),
     });
-    battleLogContainer = [];
-    setBattleLog([]);
 
     startFight();
   };
 
   const startFight = () => {
+    battleLogContainer = [];
+    setBattleLog([]);
     if (fullPlayer.player.health > 0 && monster.health > 0) {
       doPlayerAttack();
       doMonsterAttack();
