@@ -1,9 +1,8 @@
+import { Player } from "@prisma/client";
 import { getSession, useSession } from "next-auth/client";
 import React, { useState } from "react";
-import { IFullPlayer } from "../components/PlayerCard";
 import SiteLayout from "../components/SiteLayout";
 import prisma from "../lib/prisma";
-
 
 // index.tsx
 export const getServerSideProps = async (context) => {
@@ -14,19 +13,7 @@ export const getServerSideProps = async (context) => {
       where: { userId: session?.userId },
     });
 
-    const fullPlayer: IFullPlayer = {
-      player: player,
-      equipement: {
-        weapon: await prisma.player
-          ?.findFirst({
-            where: { userId: session?.userId },
-          })
-          .inventory()
-          .weapon(),
-      },
-    };
-
-    return { props: { fullPlayer } };
+    return { props: { player } };
   } else {
     return { props: {} };
   }
@@ -34,7 +21,7 @@ export const getServerSideProps = async (context) => {
 
 function HomePage(props) {
   const [session, loading] = useSession();
-  const [fullPlayer] = useState<IFullPlayer>(props.fullPlayer);
+  const [fullPlayer] = useState<Player>(props.player);
 
   if (!loading && !session)
     return (
@@ -45,9 +32,7 @@ function HomePage(props) {
 
   return (
     <SiteLayout>
-    <React.Fragment>
-    
-    </React.Fragment>
+      <React.Fragment></React.Fragment>
     </SiteLayout>
   );
 }

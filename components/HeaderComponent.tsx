@@ -4,16 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { signOut, useSession } from "next-auth/client";
 import { Button, Layout, Menu } from "antd";
-import { IFullPlayer } from "./PlayerCard";
+import { Player } from "@prisma/client";
 
 const { Header } = Layout;
 
 interface IHeaderComponentProps {
-  fullPlayer: IFullPlayer;
+  player: Player;
 }
 
-const HeaderComponent = ({ fullPlayer }: IHeaderComponentProps) => {
-  console.log(fullPlayer);
+const HeaderComponent = ({ player }: IHeaderComponentProps) => {
 
   const router = useRouter();
   const isActive: (pathname: string) => boolean = (pathname) =>
@@ -69,10 +68,10 @@ const HeaderComponent = ({ fullPlayer }: IHeaderComponentProps) => {
     );
   }
 
-  if (fullPlayer && session) {
+  if (player && session) {
     left = (
       <div className="left">
-        {fullPlayer.player.name}
+        {player.name}
 
         <style jsx>{`
           .left {

@@ -1,9 +1,9 @@
-import { Monster } from "@prisma/client";
+import { Monster, Player } from "@prisma/client";
 import { Button, Card, Col, message, Row } from "antd";
 import { getSession, useSession } from "next-auth/client";
 import React, { useEffect, useRef, useState } from "react";
 import MonsterCard from "../components/MonsterCard";
-import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
+import PlayerCard from "../components/PlayerCard";
 import SiteLayout from "../components/SiteLayout";
 import prisma from "../lib/prisma";
 import { cloneDeep } from "lodash";
@@ -19,38 +19,33 @@ export enum MULTIPLIERS {
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
-  console.log(context.query, "query");
+
   if (session) {
     const player = await prisma.player?.findFirst({
       where: { userId: session?.userId },
     });
 
-    const fullPlayer: IFullPlayer = {
-      player: player,
-      equipement: {
-        weapon: await prisma.player
-          ?.findFirst({
-            where: { userId: session?.userId },
-          })
-          .inventory()
-          .weapon(),
-      },
-    };
+    const equip = await prisma.playerEquip?.findUnique({
+      where: { playerId: player.id }
+    })
 
     const monster = await prisma.monster?.findFirst({
       where: { id: parseInt(context.query.monsterId, 10) },
     });
 
-    return { props: { fullPlayer, monster } };
+
+
+    return { props: { player, equip, monster } };
   } else {
     return { props: {} };
   }
 };
 
 function FightPage(props) {
+  console.log(props);
   const [session, loading] = useSession();
-  const [fullPlayer, setFullPlayer] = useState<IFullPlayer>(
-    cloneDeep(props.fullPlayer)
+  const [playerInState, setPlayerInState] = useState<Player>(
+    cloneDeep(props.player)
   );
   const [monster, setMonster] = useState<Monster>(cloneDeep(props.monster));
   const [battleLog, setBattleLog] = useState<string[]>([]);
@@ -68,9 +63,9 @@ function FightPage(props) {
     );
 
   const savePlayer = async () => {
-    await fetch(`http://localhost:3000/api/player/${fullPlayer.player.id}`, {
+    await fetch(`http://localhost:3000/api/player/${playerInState.player.id}`, {
       method: "POST",
-      body: JSON.stringify(fullPlayer.player),
+      body: JSON.stringify(playerInState.player),
     }).then((response) => {
       console.log(response);
     });
@@ -80,26 +75,19 @@ function FightPage(props) {
     // Player Won
     // Add experience and rewards to player for killing monster
     //
-    setFullPlayer({
-      equipement: fullPlayer.equipement,
-      player: {
-        ...fullPlayer.player,
-        experience: (fullPlayer.player.experience += monster.experience),
-      },
+    setPlayerInState({
+      ...playerInState,
+      experience: (playerInState.experience += monster.experience),
     });
 
     // If level  up
-    if (fullPlayer.player.experience >= fullPlayer.player.experienceToLevelUp) {
-      setFullPlayer({
-        equipement: fullPlayer.equipement,
-        player: {
-          ...fullPlayer.player,
-          level: (fullPlayer.player.level += 1),
-          experienceToLevelUp:
-            fullPlayer.player.experienceToLevelUp *
-            MULTIPLIERS.LEVELUPEXPMULTIPLIER,
-          experience: 0,
-        },
+    if (playerInState.experience >= playerInState.experienceToLevelUp) {
+      setPlayerInState({
+        ...playerInState,
+        level: (playerInState.level += 1),
+        experienceToLevelUp:
+          playerInState.experienceToLevelUp * MULTIPLIERS.LEVELUPEXPMULTIPLIER,
+        experience: 0,
       });
     }
     // Saves the local obj to the backend;
@@ -120,27 +108,20 @@ function FightPage(props) {
 
   const playerLose = () => {
     const lostExp = Math.round(
-      (fullPlayer.player.experience / fullPlayer.player.experienceToLevelUp) *
-        100
+      (playerInState.experience / playerInState.experienceToLevelUp) * 100
     );
 
-    if (fullPlayer.player.experience > 0) {
+    if (playerInState.experience > 0) {
       // Player lost
       // penelty
-      setFullPlayer({
-        equipement: fullPlayer.equipement,
-        player: {
-          ...fullPlayer.player,
-          experience: (fullPlayer.player.experience -= lostExp),
-        },
+      setPlayerInState({
+        ...playerInState,
+        experience: (playerInState.experience -= lostExp),
       });
     } else {
-      setFullPlayer({
-        equipement: fullPlayer.equipement,
-        player: {
-          ...fullPlayer.player,
-          experience: 0,
-        },
+      setPlayerInState({
+        ...playerInState,
+        experience: 0,
       });
     }
 
@@ -201,37 +182,34 @@ function FightPage(props) {
         clearInterval(fight);
       }
 
-      const calculatedTotalDamage =
-        fullPlayer.player.strength * STATSMULTIPLIERS.STR +
-        fullPlayer.equipement.weapon.maxDamage;
+/*       const calculatedTotalDamage =
+        playerInState.strength * STATSMULTIPLIERS.STR +
+        playerInState.equipement.weapon.maxDamage;
       const calculatedMinimumDamage =
-        fullPlayer.player.strength * STATSMULTIPLIERS.STR +
-        fullPlayer.equipement.weapon.minDamage;
+        playerInState.strength * STATSMULTIPLIERS.STR +
+        playerInState.equipement.weapon.minDamage;
 
       const upcomingHit = Math.floor(
         Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
           calculatedMinimumDamage
       );
 
-      if (monster.health > 0 && fullPlayer.player.health > 0) {
+      if (monster.health > 0 && playerInState.health > 0) {
         handleBattleLog("player", upcomingHit);
         setMonster({
           ...monster,
           health: (monster.health -= upcomingHit),
         });
-      }
+      } */
     }, attackSpeed);
   };
 
   const doMonsterAttack = () => {
     const fight = setInterval(() => {
-      if (fullPlayer.player.health <= 0) {
-        setFullPlayer({
-          equipement: fullPlayer.equipement,
-          player: {
-            ...fullPlayer.player,
-            health: (fullPlayer.player.health = 0),
-          },
+      if (playerInState.health <= 0) {
+        setPlayerInState({
+          ...playerInState,
+          health: (playerInState.health = 0),
         });
         playerLose();
         clearInterval(fight);
@@ -242,14 +220,11 @@ function FightPage(props) {
           monster.minDamage
       );
 
-      if (fullPlayer.player.health > 0 && monster.health > 0) {
+      if (playerInState.health > 0 && monster.health > 0) {
         handleBattleLog("monster", upcomingHit);
-        setFullPlayer({
-          equipement: fullPlayer.equipement,
-          player: {
-            ...fullPlayer.player,
-            health: (fullPlayer.player.health -= upcomingHit),
-          },
+        setPlayerInState({
+          ...playerInState,
+          health: (playerInState.health -= upcomingHit),
         });
       }
     }, monster.attackSpeed * 1000);
@@ -267,7 +242,7 @@ function FightPage(props) {
   const startFight = () => {
     battleLogContainer = [];
     setBattleLog([]);
-    if (fullPlayer.player.health > 0 && monster.health > 0) {
+    if (playerInState.player.health > 0 && monster.health > 0) {
       doPlayerAttack();
       doMonsterAttack();
       setFightStarted(true);
@@ -281,13 +256,13 @@ function FightPage(props) {
   };
 
   return (
-    <SiteLayout>
+    <SiteLayout player={props.player}>
       <Row>
         <h2>Combat</h2>
       </Row>
       <Row>
         <Col span={8}>
-          <PlayerCard fullPlayer={fullPlayer} />
+          <PlayerCard player={playerInState} />
         </Col>
         <Col span={8}>
           <Card

@@ -3,27 +3,17 @@ import { Card, Progress } from "antd";
 import { useSession } from "next-auth/client";
 import React from "react";
 
-export interface IFullPlayer {
-  player: Player;
-  equipement: {
-    weapon: Weapon;
-  };
-}
-
 interface IPlayerCardProps {
-  fullPlayer: IFullPlayer;
+  player: Player;
 }
 
-const PlayerCard = ({ fullPlayer }: IPlayerCardProps) => {
+const PlayerCard = ({ player }: IPlayerCardProps) => {
   const [session, loading] = useSession();
   let equipement;
-  let player: Player;
 
-  if (!fullPlayer) return null;
+  if (!player) return null;
   if (!loading && !session) return null;
 
-  equipement = fullPlayer.equipement;
-  player = fullPlayer.player;
 
   const calculatePercentHealth = (cur: number, max: number) => {
     const p = cur / max;
@@ -73,8 +63,8 @@ const PlayerCard = ({ fullPlayer }: IPlayerCardProps) => {
           }
         />
         <p>
-          {equipement.weapon.name} ({equipement.weapon.minDamage}-
-          {equipement.weapon.maxDamage})
+         {/*  {equipement.weapon.name} ({equipement.weapon.minDamage}-
+          {equipement.weapon.maxDamage}) */}
         </p>
       </Card>
     </React.Fragment>

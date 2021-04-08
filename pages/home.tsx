@@ -1,7 +1,7 @@
 import { Col, Row } from "antd";
 import { getSession } from "next-auth/client";
 import React from "react";
-import PlayerCard, { IFullPlayer } from "../components/PlayerCard";
+import PlayerCard from "../components/PlayerCard";
 import SiteLayout from "../components/SiteLayout";
 import prisma from "../lib/prisma";
 
@@ -13,19 +13,7 @@ export const getServerSideProps = async (context) => {
       where: { userId: session?.userId },
     });
 
-    const fullPlayer: IFullPlayer = {
-      player: player,
-      equipement: {
-        weapon: await prisma.player
-          ?.findFirst({
-            where: { userId: session?.userId },
-          })
-          .inventory()
-          .weapon(),
-      },
-    };
-
-    return { props: { fullPlayer } };
+    return { props: { player } };
   } else {
     return { props: {} };
   }
@@ -33,13 +21,13 @@ export const getServerSideProps = async (context) => {
 
 const HomePage = (props) => {
   return (
-    <SiteLayout fullPlayer={props.fullPlayer}>
+    <SiteLayout player={props.player}>
       <Row>
         <h2>Home</h2>
       </Row>
       <Row>
         <Col span={24}>
-          <PlayerCard fullPlayer={props.fullPlayer} />
+          <PlayerCard player={props.player} />
         </Col>
       </Row>
     </SiteLayout>

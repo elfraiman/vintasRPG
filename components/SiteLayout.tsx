@@ -7,9 +7,9 @@ import HeaderComponent from "../components/HeaderComponent";
 const { Sider, Content } = Layout;
 interface ISiteLayoutProps {
   children: any;
-  fullPlayer?: any;
+  player?: any;
 }
-const SiteLayout = ({ children, fullPlayer }: ISiteLayoutProps) => {
+const SiteLayout = ({ children, player }: ISiteLayoutProps) => {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const [selectedKey, setSelectedKey] = useState({ current: router.pathname });
@@ -59,7 +59,7 @@ const SiteLayout = ({ children, fullPlayer }: ISiteLayoutProps) => {
       </Sider>
 
       <Layout>
-        <HeaderComponent fullPlayer={fullPlayer} />
+        <HeaderComponent player={player} />
         <Content
           style={{
             margin: "24px 16px",

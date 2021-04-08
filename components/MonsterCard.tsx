@@ -10,11 +10,7 @@ interface IMonsterCardProps {
   hideHpBar?: boolean;
 }
 
-const MonsterCard = ({
-  monster,
-  showAttack,
-  hideHpBar,
-}: IMonsterCardProps) => {
+const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
   const router = useRouter();
   const [session, loading] = useSession();
 
@@ -28,7 +24,7 @@ const MonsterCard = ({
   };
 
   const handleAttack = () => {
-    router.push({ pathname: "/fight", query: { monsterId: monster.id } });
+    router.push({ pathname: "/fight", query: { monsterId: monster?.id } });
   };
 
   return (
