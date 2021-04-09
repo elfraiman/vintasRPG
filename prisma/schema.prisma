@@ -76,6 +76,7 @@ model Item {
   itemType     ItemType      @relation(fields: [itemTypeId], references: [id])
   itemTypeId   Int
   playerEquip  PlayerEquip[]
+  imageName    String?
 }
 
 model ItemType {

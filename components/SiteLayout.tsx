@@ -30,7 +30,7 @@ const SiteLayout = ({ children, player }: ISiteLayoutProps) => {
               marginTop: 16,
             }}
           >
-            {player.name}
+            {player?.name}
           </p>
         </span>
 

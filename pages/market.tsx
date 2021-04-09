@@ -3,7 +3,7 @@ import { getSession, useSession } from "next-auth/client";
 import React from "react";
 import SiteLayout from "../components/SiteLayout";
 import { getPlayer, IPlayer } from "../lib/functions";
-import prisma from "../lib/prisma";
+
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
@@ -11,9 +11,9 @@ export const getServerSideProps = async (context) => {
   if (session) {
     const player = await getPlayer(session.userid);
     return { props: { player } };
-  } else {
-    return { props: {} };
   }
+
+  return;
 };
 
 interface IMarketPageProps {
@@ -37,6 +37,9 @@ const MarketPage = ({ player }: IMarketPageProps) => {
     <SiteLayout player={player}>
       <Row>
         <h2>Market</h2>
+      </Row>
+      <Row>
+
       </Row>
     </SiteLayout>
   );

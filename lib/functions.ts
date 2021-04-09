@@ -1,5 +1,5 @@
+import { EquipSlotTypes, Item, ItemType } from '@prisma/client';
 import prisma from "./prisma";
-import { EquipSlotTypes, Inventory, Item, PlayerEquip, Prisma } from '@prisma/client'
 
 export interface IPlayerEquip {
     id: number
@@ -7,7 +7,25 @@ export interface IPlayerEquip {
     itemId: number
     slotId: number
     slot: EquipSlotTypes
-    item: Item
+    item: IItem
+}
+
+
+export interface IItem {
+  id: number
+  name: string
+  weight: number
+  maximumStack: number
+  minDamage: number | null
+  maxDamage: number | null
+  attackSpeed: number | null
+  cost: number | null
+  armor: number | null
+  tier: string | null
+  description: string | null
+  itemTypeId: number
+  imageName: string | null
+  itemType: ItemType
 }
 
 export interface IInventory {
@@ -15,7 +33,7 @@ export interface IInventory {
     itemId: number
     itemQuantity: number
     playerId: number
-    item: Item
+    item: IItem
 }
 
 
