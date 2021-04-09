@@ -5,13 +5,28 @@ import React from "react";
 import MonsterCard from "../components/MonsterCard";
 import { Col, Row } from "antd";
 import SiteLayout from "../components/SiteLayout";
+import { getPlayer, IPlayer } from "../lib/functions";
 // index.tsx
 
 interface IFightCatalogueProps {
   monsters: Monster[];
+  player: IPlayer
 }
 
-const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
+export const getServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (session) {
+    const player = await getPlayer(session.userId);
+    const monsters = await prisma.monster.findMany();
+
+    return { props: { monsters, player } };
+  } else {
+    return { props: {} };
+  }
+};
+
+const FightCatalogue = ({ monsters, player }: IFightCatalogueProps) => {
   const [session, loading] = useSession();
 
   if (!loading && !session)
@@ -22,7 +37,7 @@ const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
     );
   const sortedMonsters = monsters.sort((a, b) => (a.level > b.level ? 1 : -1));
   return (
-    <SiteLayout>
+    <SiteLayout player={player}>
       <Row>
         <h2>Known Monsters</h2>
       </Row>
@@ -30,25 +45,17 @@ const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
         {sortedMonsters.map((monster) => {
           return (
             <Col key={monster.id} span={8}>
-              <MonsterCard monster={monster} showAttack={true} hideHpBar={true} />
+              <MonsterCard
+                monster={monster}
+                showAttack={true}
+                hideHpBar={true}
+              />
             </Col>
           );
         })}
       </Row>
     </SiteLayout>
   );
-};
-
-export const getServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  if (session) {
-    const monsters = await prisma.monster?.findMany();
-
-    return { props: { monsters } };
-  } else {
-    return { props: {} };
-  }
 };
 
 export default FightCatalogue;

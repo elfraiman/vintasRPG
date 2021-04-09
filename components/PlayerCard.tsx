@@ -1,7 +1,9 @@
-import { Player, Weapon } from "@prisma/client";
+import { Player } from "@prisma/client";
 import { Card, Progress } from "antd";
 import { useSession } from "next-auth/client";
 import React from "react";
+
+
 
 interface IPlayerCardProps {
   player: Player;
@@ -18,13 +20,13 @@ const PlayerCard = ({ player }: IPlayerCardProps) => {
   const calculatePercentHealth = (cur: number, max: number) => {
     const p = cur / max;
     const result = p * 100;
-    return result;
+    return Math.round(result);
   };
 
   const calculateExperience = (cur: number, max: number) => {
     const p = cur / max;
     const result = p * 100;
-    return result;
+    return Math.round(result);
   };
 
   return (
@@ -47,7 +49,7 @@ const PlayerCard = ({ player }: IPlayerCardProps) => {
             player.experienceToLevelUp
           )}
           type="line"
-          showInfo={false}
+          showInfo={true}
         />
         <p style={{ marginBottom: 0 }}>
           Health: {player.health} / {player.maxHealth}

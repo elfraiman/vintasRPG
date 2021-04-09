@@ -3,8 +3,9 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { signOut, useSession } from "next-auth/client";
-import { Button, Layout, Menu } from "antd";
+import { Button, Layout, Menu, Spin } from "antd";
 import { Player } from "@prisma/client";
+import Image from "next/image";
 
 const { Header } = Layout;
 
@@ -13,7 +14,6 @@ interface IHeaderComponentProps {
 }
 
 const HeaderComponent = ({ player }: IHeaderComponentProps) => {
-
   const router = useRouter();
   const isActive: (pathname: string) => boolean = (pathname) =>
     router.pathname === pathname;
@@ -71,14 +71,38 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
   if (player && session) {
     left = (
       <div className="left">
-        {player.name}
+        <span className="name">{player.name}</span>
+        <span className="currency">
+          <Image src="/assets/icons/gold-coins.svg" width={25} height={20} />
+          {new Intl.NumberFormat("en-IN", {
+            maximumSignificantDigits: 3,
+          }).format(player.gold)}
+        </span>
+
+        <span style={{ marginLeft: 26 }}>LEVEL: {player.level}</span>
+
+        <span style={{ marginLeft: 26 }}>STR: {player.strength}</span>
+
+        <span style={{ marginLeft: 26 }}>DEX: {player.dexterity}</span>
+
+        <span style={{ marginLeft: 26 }}>INT: {player.intelligence}</span>
+
+        <span style={{ marginLeft: 26 }}>CON: {player.constitution}</span>
 
         <style jsx>{`
+          .currency {
+            font-weight: 600;
+            color: #ffd700;
+            margin-left: 26px;
+          }
+          .name {
+            font-weight: 600;
+          }
           .left {
             margin-right: auto;
             color: white;
           }
-          `}</style>
+        `}</style>
       </div>
     );
   }
@@ -94,8 +118,14 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
         height: "80px",
       }}
     >
-      {left}
-      {right}
+      {loading ? (
+        <Spin />
+      ) : (
+        <React.Fragment>
+          {left}
+          {right}
+        </React.Fragment>
+      )}
     </Header>
   );
 };

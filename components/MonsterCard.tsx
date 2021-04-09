@@ -1,9 +1,9 @@
-import { Monster, Player, Weapon } from "@prisma/client";
+import { Monster } from "@prisma/client";
 import { Button, Card, Progress } from "antd";
 import { useSession } from "next-auth/client";
-import React, { useState } from "react";
-import { useRouter } from "next/router";
 import Image from "next/image";
+import { useRouter } from "next/router";
+import React from "react";
 interface IMonsterCardProps {
   monster: Monster;
   showAttack?: boolean;
@@ -48,7 +48,7 @@ const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
           }}
         >
           <Image
-            src={`/assets/icons/monster-${monster.id}.svg`}
+            src={`/assets/icons/monster-${monster.name}.svg`}
             width={120}
             height={120}
           />

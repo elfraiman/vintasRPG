@@ -26,27 +26,27 @@ model User {
 }
 
 model Player {
-  id                  Int          @id @default(autoincrement())
-  name                String?      @unique
-  user                User         @relation(fields: [userId], references: [id])
-  userId              Int          @unique
+  id                  Int           @id @default(autoincrement())
+  name                String?       @unique
+  user                User          @relation(fields: [userId], references: [id])
+  userId              Int           @unique
   strength            Int
   dexterity           Int
   constitution        Int
   intelligence        Int
-  weightLimit         Int          @default(100)
-  health              Int          @default(10)
-  maxHealth           Int          @default(10)
+  weightLimit         Int           @default(100) // Since its not static, maybe do the calculation on loading a player.
+  health              Int           @default(10)
+  maxHealth           Int           @default(10)
   defense             Int
   damageReduction     Int
   evasion             Int
   experience          Int
-  experienceToLevelUp Int          @default(300)
-  level               Int          @default(1)
-  inventory           Inventory?
-  equipement          PlayerEquip?
-  gold                Int          @default(100)
-  equipedItems        Json         @default("{}")
+  experienceToLevelUp Int           @default(300)
+  level               Int           @default(1)
+  inventory           Inventory[]
+  maxInventorySlots   Int           @default(16)
+  equipement          PlayerEquip[]
+  gold                Int           @default(100)
 
   inventoryId Int
   @@map(name: "players")
@@ -60,17 +60,30 @@ model Currencies {
   @@map(name: "currenices")
 }
 
-model WeaponTag {
-  id      Int      @id @default(autoincrement())
-  weapons Weapon[] @relation(references: [id])
+model Item {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  weight       Float
+  maximumStack Int
+  inventory    Inventory[]
+  minDamage    Int?
+  maxDamage    Int?
+  attackSpeed  Float?
+  cost         Int?
+  armor        Int?
+  tier         String?
+  description  String?
+  itemType     ItemType      @relation(fields: [itemTypeId], references: [id])
+  itemTypeId   Int
+  playerEquip  PlayerEquip[]
 }
 
-model Item {
-  id           Int         @id @default(autoincrement())
-  name         String      @unique
-  maximumStack Int
-  consumable   Boolean
-  Inventory    Inventory[]
+model ItemType {
+  id          Int     @id @default(autoincrement())
+  type        String
+  displayName String
+  subType     String?
+  items       Item[]
 }
 
 model Inventory {
@@ -84,28 +97,24 @@ model Inventory {
   @@map(name: "inventory")
 }
 
-model PlayerEquip {
-  id               Int    @id @default(autoincrement())
-  playerId         Int    @unique
-  player           Player @relation(fields: [playerId], references: [id])
-  headSlot         Int
-  weaponSlotItemId Int    @default(0)
-
-  @@map(name: "equipement")
+model EquipSlotTypes {
+  id                 Int           @id @default(autoincrement())
+  maximumUsableSlots Int           @default(1)
+  type               String        @default("")
+  displayName        String
+  playerEquips       PlayerEquip[]
 }
 
-model Weapon {
-  id          Int         @id @default(autoincrement())
-  name        String      @unique
-  description String?
-  minDamage   Int
-  maxDamage   Int
-  cost        Int
-  weight      Float
-  tier        String
-  weaponTags  WeaponTag[] @relation(references: [id])
+model PlayerEquip {
+  id       Int            @id @default(autoincrement())
+  playerId Int
+  player   Player         @relation(fields: [playerId], references: [id])
+  item     Item           @relation(fields: [itemId], references: [id])
+  itemId   Int
+  slotId   Int
+  slot     EquipSlotTypes @relation(fields: [slotId], references: [id])
 
-  @@map(name: "weapons")
+  @@map(name: "equipement")
 }
 
 model DropCollection {
@@ -121,7 +130,7 @@ model Monster {
   name               String? @unique
   health             Int
   maxHealth          Int     @default(10)
-  attackSpeed        Int     @default(2)
+  attackSpeed        Float   @default(2.0)
   armor              Float
   damageReduction    Int
   evasion            Int
@@ -130,6 +139,7 @@ model Monster {
   minDamage          Int
   maxDamage          Int
   currencyMultiplier Float   @default(1.1)
+  goldDrop           Int     @default(5)
 
   @@map(name: "monsters")
 }

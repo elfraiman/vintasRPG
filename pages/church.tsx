@@ -1,17 +1,16 @@
-import { Button, Card, Col, Row, message } from "antd";
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { getSession, useSession } from "next-auth/client";
-import prisma from "../lib/prisma";
 import { Player } from "@prisma/client";
+import { Button, Card, Col, message, Row } from "antd";
+import { getSession, useSession } from "next-auth/client";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import SiteLayout from "../components/SiteLayout";
+import { getPlayer } from "../lib/functions";
+import { cloneDeep } from "lodash";
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
   if (session) {
-    const player = await prisma.player?.findFirst({
-      where: { userId: session?.userId },
-    });
+    const player = await getPlayer(session.userId);
 
     return { props: { player } };
   } else {
@@ -21,8 +20,9 @@ export const getServerSideProps = async (context) => {
 
 const ChurchPage = (props) => {
   const [session, loading] = useSession();
-  const [player, setPlayer] = useState<Player>(props.player);
+  const [player, setPlayer] = useState<Player>(cloneDeep(props.player));
   const [priestText, setPriestText] = useState<string>();
+  const [cost, setCost] = useState<number>(0);
 
   if (!loading && !session)
     return (
@@ -32,6 +32,12 @@ const ChurchPage = (props) => {
     );
 
   const healPlayer = () => {
+    if (player.gold < cost) {
+      message.error("You don't have enough gold");
+      return;
+    } 
+
+
     if (player.health >= player.maxHealth) {
       message.error("You're already full health..");
     } else {
@@ -39,6 +45,7 @@ const ChurchPage = (props) => {
       setPlayer({
         ...player,
         health: (player.health += player.maxHealth - player.health),
+        gold: player.gold -= cost
       });
 
       savePlayer();
@@ -46,26 +53,34 @@ const ChurchPage = (props) => {
   };
 
   useEffect(() => {
+    // Calculate amount to heal and cost
+    let amountToHeal = player.health === 0 ? player.maxHealth : player.maxHealth - player.health;
+
+    // Heal amount cost
+    //
+
+    const costToHeal = Math.floor(amountToHeal * 1.40) + 1;
+    console.log(amountToHeal, costToHeal)
+    setCost(costToHeal);
+
     if (player.health < player.maxHealth) {
       setPriestText(
-        " For my services it will cost you X gold to revive you to full health."
+        `For my services it will cost you ${costToHeal} gold to revive you to full health.`
       );
     } else {
       setPriestText(
         `Welcome back, ${player.name}. You are full health, I have no service for you.`
       );
     }
-  }, [player]);
+  }, [player, props]);
 
   // Make a post call to the api to save the player
   const savePlayer = async () => {
-    console.log(player);
     await fetch(`http://localhost:3000/api/player/${player.id}`, {
       method: "POST",
       body: JSON.stringify(player),
     }).then(async (response) => {
-      console.log(response);
-      message.success("You've been healed, don't let it happen again...");
+      message.success(`You've been healed and payed ${cost} gold, don't let it happen again...`);
       setPriestText(
         `Good luck ${player.name}, don't try to avoid death or you'll end up avoiding life.`
       );
@@ -75,7 +90,7 @@ const ChurchPage = (props) => {
   };
 
   return (
-    <SiteLayout>
+    <SiteLayout player={player}>
       <Row>
         <h2>Church</h2>
       </Row>
