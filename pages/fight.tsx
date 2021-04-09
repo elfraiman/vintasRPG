@@ -33,8 +33,6 @@ export const getServerSideProps = async (context) => {
       where: { id: parseInt(context.query.monsterId, 10) },
     });
 
-
-
     return { props: { player, equip, monster } };
   } else {
     return { props: {} };
@@ -63,9 +61,9 @@ function FightPage(props) {
     );
 
   const savePlayer = async () => {
-    await fetch(`http://localhost:3000/api/player/${playerInState.player.id}`, {
+    await fetch(`http://localhost:3000/api/player/${playerInState.id}`, {
       method: "POST",
-      body: JSON.stringify(playerInState.player),
+      body: JSON.stringify(playerInState),
     }).then((response) => {
       console.log(response);
     });
@@ -242,7 +240,7 @@ function FightPage(props) {
   const startFight = () => {
     battleLogContainer = [];
     setBattleLog([]);
-    if (playerInState.player.health > 0 && monster.health > 0) {
+    if (playerInState.health > 0 && monster.health > 0) {
       doPlayerAttack();
       doMonsterAttack();
       setFightStarted(true);

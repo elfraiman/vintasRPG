@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { getSession, useSession } from "next-auth/client";
 import prisma from "../lib/prisma";
-import { IFullPlayer } from "../components/PlayerCard";
 import { Player } from "@prisma/client";
 import SiteLayout from "../components/SiteLayout";
 
