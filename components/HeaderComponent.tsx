@@ -71,7 +71,6 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
   if (player && session) {
     left = (
       <div className="left">
-        <span className="name">{player.name}</span>
         <span className="currency">
           <Image src="/assets/icons/gold-coins.svg" width={25} height={20} />
           {new Intl.NumberFormat("en-IN", {

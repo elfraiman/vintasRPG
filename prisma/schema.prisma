@@ -46,7 +46,7 @@ model Player {
   inventory           Inventory[]
   maxInventorySlots   Int           @default(16)
   equipement          PlayerEquip[]
-  gold                Int           @default(100)
+  gold                Int           @default(500)
 
   inventoryId Int
   @@map(name: "players")

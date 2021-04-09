@@ -66,6 +66,9 @@ function FightPage({ player, monster }: IFightPageProps) {
       </React.Fragment>
     );
 
+
+    // save the local state player to the back-end
+    //
   const savePlayer = async () => {
     console.log(playerInState, "instate");
     await fetch(`http://localhost:3000/api/player/${player.id}`, {
@@ -76,8 +79,12 @@ function FightPage({ player, monster }: IFightPageProps) {
     });
   };
 
+
+  // 1 of 3 chance to loot gold
+  // calculate gold loot with multiplier
+  //
   const lootGoldRoll = () => {
-    const dropGold = Math.floor(Math.random() * 3);
+    const dropGold = Math.floor(Math.random() * 2);
     const getMonsterGoldDrop = Math.round(
       Math.floor(Math.random() * monster.goldDrop + 1) *
         monster.currencyMultiplier
@@ -89,16 +96,23 @@ function FightPage({ player, monster }: IFightPageProps) {
   };
 
   const levelUpPlayer = () => {
+    // Calculate hp gained from leveling using
+    // con multiplier 
+    //
     const healthToGain =
       Math.round(
         playerInState.constitution * STATSMULTIPLIERS.CON +
           playerInState.maxHealth * 1.1
       ) - playerInState.maxHealth;
 
+
+      // Calculate next xp to level
     const nextExpToLevelUp = Math.floor(
       (playerInState.experienceToLevelUp *= MULTIPLIERS.LEVELUPEXPMULTIPLIER)
     );
 
+    // Add level, calculate next xp to level, set xp to 0, calculate new max health and 
+    // set current health to maxHealth
     setPlayerInState({
       ...playerInState,
       level: (playerInState.level += 1),
@@ -148,6 +162,7 @@ function FightPage({ player, monster }: IFightPageProps) {
     // If level  up
     if (playerInState.experience >= playerInState.experienceToLevelUp) {
       levelUpPlayer();
+      // we return here because we save the player in the levelup
       return;
     }
 
@@ -173,8 +188,6 @@ function FightPage({ player, monster }: IFightPageProps) {
       });
     }
 
-    // Saves the local obj to the backend;
-    savePlayer();
     setFightStarted(false);
 
     setBattleLog([
@@ -188,6 +201,9 @@ function FightPage({ player, monster }: IFightPageProps) {
     message.error(
       `You died to the ${monsterInState.name} and lost ${monsterInState.experience} experience`
     );
+    
+    // Saves the local obj to the backend;
+    savePlayer();
   };
 
   const handleBattleLog = (
