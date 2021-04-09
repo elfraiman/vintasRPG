@@ -8,6 +8,7 @@ export default async function handle(req, res) {
   delete player['inventory']
   delete player['equipmenet']
   
+  console.log(player)
   prisma.player
     .update({
       where: { userId: parseInt(req.query.id, 10) },

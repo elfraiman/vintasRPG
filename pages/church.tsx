@@ -76,7 +76,7 @@ const ChurchPage = (props) => {
 
   // Make a post call to the api to save the player
   const savePlayer = async () => {
-    await fetch(`http://localhost:3000/api/player/${player.id}`, {
+    await fetch(`http://localhost:3000/api/player/${props.player.id}`, {
       method: "POST",
       body: JSON.stringify(player),
     }).then(async (response) => {
@@ -84,6 +84,7 @@ const ChurchPage = (props) => {
       setPriestText(
         `Good luck ${player.name}, don't try to avoid death or you'll end up avoiding life.`
       );
+
       // sets the player to itself to trigger a re-render
       setPlayer({ ...player });
     });

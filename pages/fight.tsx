@@ -18,6 +18,7 @@ export enum WEAPONTYPES {
 export enum STATSMULTIPLIERS {
   STR = 0.255,
   DEX = 0.125,
+  CON = 0.825,
 }
 
 export enum MULTIPLIERS {
@@ -47,7 +48,7 @@ export const getServerSideProps = async (context) => {
 
 function FightPage({ player, monster }: IFightPageProps) {
   const [session, loading] = useSession();
-  const [playerInState, setPlayerInState] = useState<Player>(cloneDeep(player));
+  const [playerInState, setPlayerInState] = useState<Player>(player);
   const [monsterInState, setMonster] = useState<Monster>(cloneDeep(monster));
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [fightStarted, setFightStarted] = useState<boolean>(false);
@@ -66,7 +67,8 @@ function FightPage({ player, monster }: IFightPageProps) {
     );
 
   const savePlayer = async () => {
-    await fetch(`http://localhost:3000/api/player/${playerInState.id}`, {
+    console.log(playerInState, "instate");
+    await fetch(`http://localhost:3000/api/player/${player.id}`, {
       method: "POST",
       body: JSON.stringify(playerInState),
     }).then((response) => {
@@ -74,46 +76,55 @@ function FightPage({ player, monster }: IFightPageProps) {
     });
   };
 
-  const lootRoll = () => {
+  const lootGoldRoll = () => {
     const dropGold = Math.floor(Math.random() * 3);
     const getMonsterGoldDrop = Math.round(
       Math.floor(Math.random() * monster.goldDrop + 1) *
         monster.currencyMultiplier
     );
-    console.log(dropGold, "dropgold", getMonsterGoldDrop);
-    if (dropGold === 1) {
-      setPlayerInState({
-        ...playerInState,
-        gold: playerInState.gold += getMonsterGoldDrop,
-      });
 
+    if (dropGold === 1) {
       return getMonsterGoldDrop;
     }
   };
 
+  const levelUpPlayer = () => {
+    const healthToGain =
+      Math.round(
+        playerInState.constitution * STATSMULTIPLIERS.CON +
+          playerInState.maxHealth * 1.1
+      ) - playerInState.maxHealth;
+
+    const nextExpToLevelUp = Math.floor(
+      (playerInState.experienceToLevelUp *= MULTIPLIERS.LEVELUPEXPMULTIPLIER)
+    );
+
+    setPlayerInState({
+      ...playerInState,
+      level: (playerInState.level += 1),
+      experienceToLevelUp: (playerInState.experienceToLevelUp +=
+        nextExpToLevelUp - playerInState.experienceToLevelUp),
+      experience: (playerInState.experience = 0),
+      maxHealth: (playerInState.maxHealth += healthToGain),
+      health: (playerInState.health +=
+        playerInState.maxHealth - playerInState.health),
+    });
+
+    message.success(`You have leveled up! you gained ${healthToGain} health!`);
+    savePlayer();
+  };
+
   const playerWin = () => {
-     // Saves the local obj to the backend;
-     const gold = lootRoll();
+    // Saves the local obj to the backend;
+    const gold = lootGoldRoll();
     // Player Won
     // Add experience and rewards to player for killing monster
     //
     setPlayerInState({
       ...playerInState,
       experience: (playerInState.experience += monsterInState.experience),
+      gold: gold ? (playerInState.gold += gold) : playerInState.gold,
     });
-
-    // If level  up
-    if (playerInState.experience >= playerInState.experienceToLevelUp) {
-      setPlayerInState({
-        ...playerInState,
-        level: (playerInState.level += 1),
-        experienceToLevelUp:
-          playerInState.experienceToLevelUp * MULTIPLIERS.LEVELUPEXPMULTIPLIER,
-        experience: 0,
-      });
-    }
-
-
 
     setFightStarted(false);
     setBattleLog([
@@ -133,6 +144,13 @@ function FightPage({ player, monster }: IFightPageProps) {
       </span>,
     ]);
     message.info(`You killed the ${monsterInState.name}.`);
+
+    // If level  up
+    if (playerInState.experience >= playerInState.experienceToLevelUp) {
+      levelUpPlayer();
+      return;
+    }
+
     savePlayer();
   };
 
@@ -151,7 +169,7 @@ function FightPage({ player, monster }: IFightPageProps) {
     } else {
       setPlayerInState({
         ...playerInState,
-        experience: 0,
+        experience: (playerInState.experience = 0),
       });
     }
 
@@ -212,17 +230,11 @@ function FightPage({ player, monster }: IFightPageProps) {
     if (playerDuelWielding) {
       // Main hand hit
       //
-      const hitMainHand = setInterval(() => {
-        if (monsterInState.health <= 0) {
-          playerWin();
-          clearInterval(hitOffhand);
-          clearInterval(hitMainHand);
-        }
 
+      const hitMainHand = setInterval(() => {
         // If player is duel wielding we cant to create
         // more hits.
         //
-
         const calculatedTotalDamage =
           playerInState.strength * STATSMULTIPLIERS.STR +
           playerMainhand.maxDamage;
@@ -251,15 +263,16 @@ function FightPage({ player, monster }: IFightPageProps) {
             ...monsterInState,
             health: (monsterInState.health -= upcomingHit),
           });
+
+          if (monsterInState.health <= 0) {
+            playerWin();
+            clearInterval(hitOffhand);
+            clearInterval(hitMainHand);
+          }
         }
       }, playerMainhand.attackSpeed * 1000);
 
       const hitOffhand = setInterval(() => {
-        if (monsterInState.health <= 0) {
-          playerWin();
-          clearInterval(hitOffhand);
-          clearInterval(hitMainHand);
-        }
         // If player is duel wielding we cant to create
         // more hits.
         //
@@ -292,16 +305,17 @@ function FightPage({ player, monster }: IFightPageProps) {
             health: (monsterInState.health -= upcomingHit),
           });
         }
+
+        if (monsterInState.health <= 0) {
+          playerWin();
+          clearInterval(hitOffhand);
+          clearInterval(hitMainHand);
+        }
       }, playerOffhand.attackSpeed * 1000);
     } else {
       // 2 handed hit
       //
       const twoHandedHit = setInterval(() => {
-        if (monsterInState.health <= 0) {
-          playerWin();
-          clearInterval(twoHandedHit);
-        }
-
         // If player is duel wielding we cant to create
         // more hits.
         //
@@ -335,6 +349,11 @@ function FightPage({ player, monster }: IFightPageProps) {
             health: (monsterInState.health -= upcomingHit),
           });
         }
+
+        if (monsterInState.health <= 0) {
+          playerWin();
+          clearInterval(twoHandedHit);
+        }
       }, playerTwoHanded.attackSpeed * 1000);
     }
   };
@@ -346,6 +365,7 @@ function FightPage({ player, monster }: IFightPageProps) {
           ...playerInState,
           health: (playerInState.health = 0),
         });
+
         playerLose();
         clearInterval(fight);
       }
@@ -392,6 +412,10 @@ function FightPage({ player, monster }: IFightPageProps) {
     setFightStarted(false);
   };
 
+  useEffect(() => {
+    startFight();
+  }, []);
+
   return (
     <SiteLayout player={playerInState}>
       <Row>
@@ -419,10 +443,8 @@ function FightPage({ player, monster }: IFightPageProps) {
           <Row style={{ marginTop: 16 }}>
             {fightStarted ? (
               <Button>Run</Button>
-            ) : monsterInState.health <= 0 ? (
-              <Button onClick={startReFight}>Fight Again</Button>
             ) : (
-              <Button onClick={startFight}>Fight</Button>
+              <Button onClick={startReFight}>Fight Again</Button>
             )}
           </Row>
         </Col>
