@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
-import { IInventory, IItem, IPlayer } from "../lib/functions";
-import Image from "next/image";
-import { Badge, Card } from "antd";
+import React, { useEffect } from 'react';
+import { IInventory, IItem, IPlayer } from '../lib/functions';
+import Image from 'next/image';
+import { Badge, Card } from 'antd';
 
 interface IInventoryProps {
   player: IPlayer;
@@ -25,17 +25,45 @@ const InventoryCard = ({ player, setPlayer, setGlobalCD }: IInventoryProps) => {
 
   useEffect(() => {
     createInventory();
-  }, []);
+  }, [player]);
 
-  const clickItem = (item: IItem) => {
-    if (item.itemType.type === "consumable") {
-      switch (item.itemType.subType) {
-        case "health":
+  const deleteItem = async (id: number) => {
+    console.log('trigger');
+    await fetch(
+      `http://localhost:3000/api/player/deleteInventoryItem/${id}`
+    ).then((response) => {
+      console.log(response);
+    });
+  };
+  const clickItem = (slotItemClicked: IItem) => {
+    if (slotItemClicked.itemType.type === 'consumable') {
+      switch (slotItemClicked.itemType.subType) {
+        case 'health':
           setGlobalCD(true);
-          setPlayer({
-            ...player,
-            health: (player.health += item.effectAmount),
-          });
+          const itemInInventory = player.inventory.find(
+            (itemInInv) => itemInInv.item.name === slotItemClicked.name
+          );
+
+          if (itemInInventory.itemQuantity > 0) {
+            itemInInventory.itemQuantity -= 1;
+            setPlayer({
+              ...player,
+              health: (player.health += slotItemClicked.effectAmount),
+              inventory: player.inventory,
+            });
+          } else {
+            setPlayer({
+              ...player,
+              health: (player.health += slotItemClicked.effectAmount),
+              inventory: player.inventory.filter(
+                (itemInInv) => itemInInv.item.id !== itemInInventory.item.id
+              ),
+            });
+            console.log('delete it ')
+            deleteItem(itemInInventory.id);
+            break;
+          }
+
           break;
 
         default:
@@ -49,8 +77,8 @@ const InventoryCard = ({ player, setPlayer, setGlobalCD }: IInventoryProps) => {
       <div className="bag-slots">
         {createInventory().map((slot, index) => (
           <Badge
-            style={{ backgroundColor: "#773ee0" }}
-            count={slot?.itemQuantity === 1 ? null : slot?.itemQuantity}
+            style={{ backgroundColor: '#773ee0' }}
+            count={slot?.itemQuantity <= 1 ? null : slot?.itemQuantity}
             offset={[-25, 0]}
             key={index}
           >

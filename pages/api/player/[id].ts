@@ -1,23 +1,39 @@
 // pages/api/publish/[id].ts
 
+import { IPlayer } from "../../../lib/functions";
 import prisma from "../../../lib/prisma";
 
 // PUT /api/publish/:id
 export default async function handle(req, res) {
-  const player = JSON.parse(req.body);
+  console.log(req.query, 'req');
+  const player: IPlayer = JSON.parse(req.body);
   delete player['inventory']
-  delete player['equipmenet']
-  
-  console.log(player)
-  prisma.player
-    .update({
-      where: { userId: parseInt(req.query.id, 10) },
+  delete player['equipement']
+
+  const playerObj: IPlayer = JSON.parse(req.body);
+
+  playerObj.inventory.forEach(async slot => {
+    
+    await prisma.player.update({
+      where: {
+        id: player.id,
+      },
       data: {
         ...player,
-        inventory: req.body.inventory, // has to be in json
-        equipement: req.body.equipement // has to be in json
+        equipement: req.body.equipement,
+        inventory: {
+          update: {
+            where: {
+              id: slot.id
+            },
+            data: {
+              itemQuantity: slot.itemQuantity
+            }
+          }
+        },
       },
     })
-    .then((d) => res.json(d))
-    .catch((error) => console.error(error));
+      .catch((error) => console.error(error));
+  })
+
 }

@@ -1,20 +1,20 @@
-import { Monster, Player } from "@prisma/client";
-import { Button, Card, Col, message, Row } from "antd";
-import { cloneDeep } from "lodash";
-import { getSession, useSession } from "next-auth/client";
-import React, { useEffect, useRef, useState } from "react";
-import InventoryCard from "../components/InventoryComponent";
-import MonsterCard from "../components/MonsterCard";
-import PlayerCard from "../components/PlayerCard";
-import SiteLayout from "../components/SiteLayout";
-import { getPlayer, IPlayer } from "../lib/functions";
+import { Monster, Player } from '@prisma/client';
+import { Button, Card, Col, message, Row } from 'antd';
+import { cloneDeep } from 'lodash';
+import { getSession, useSession } from 'next-auth/client';
+import React, { useEffect, useRef, useState } from 'react';
+import InventoryCard from '../components/InventoryComponent';
+import MonsterCard from '../components/MonsterCard';
+import PlayerCard from '../components/PlayerCard';
+import SiteLayout from '../components/SiteLayout';
+import { getPlayer, IPlayer } from '../lib/functions';
 1;
-import prisma from "../lib/prisma";
+import prisma from '../lib/prisma';
 
 export enum WEAPONTYPES {
-  MAINHAND = "mainhand",
-  OFFHAND = "offhand",
-  TWOHANDED = "twohanded",
+  MAINHAND = 'mainhand',
+  OFFHAND = 'offhand',
+  TWOHANDED = 'twohanded',
 }
 export enum STATSMULTIPLIERS {
   STR = 0.255,
@@ -56,7 +56,7 @@ function FightPage({ player, monster }: IFightPageProps) {
   const [battleLog, setBattleLog] = useState<any>([]);
   const [fightStarted, setFightStarted] = useState<boolean>(false);
   const [globalCD, setGlobalCD] = useState<boolean>(false);
-  const [playerHit, setPlayerHit] = useState({ dmg: 0, slot: "" });
+  const [playerHit, setPlayerHit] = useState({ dmg: 0, slot: '' });
   const [playerTwohandInterval, setPlayerTwoHandInterval] = useState<any>();
   const [playerMainhandInterval, setPlayerMainHandInterval] = useState<any>();
   const [playerOffhandInterval, setPlayerOffhandInterval] = useState<any>();
@@ -85,14 +85,15 @@ function FightPage({ player, monster }: IFightPageProps) {
       </React.Fragment>
     );
 
-  // save the local state player to the back-end
+  // Save the local state player to the back-end
   //
   const savePlayer = async () => {
+    console.log(playerInState);
     await fetch(`http://localhost:3000/api/player/${player.id}`, {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify(playerInState),
     }).then((response) => {
-      console.log(response);
+      // console.log(response);
     });
   };
 
@@ -111,6 +112,8 @@ function FightPage({ player, monster }: IFightPageProps) {
     }
   };
 
+  //  Levelup player
+  //
   const levelUpPlayer = () => {
     // Calculate hp gained from leveling using
     // con multiplier
@@ -143,6 +146,7 @@ function FightPage({ player, monster }: IFightPageProps) {
     savePlayer();
   };
 
+  // Handle player winning
   const playerWin = () => {
     // Saves the local obj to the backend;
     const gold = lootGoldRoll();
@@ -159,13 +163,13 @@ function FightPage({ player, monster }: IFightPageProps) {
     setBattleLog([
       ...battleLog,
       <span>
-        You have killed the {monsterInState.name} and gained{" "}
-        <span style={{ color: "#1890ff" }}>{monsterInState.experience}</span>{" "}
-        experience{" "}
+        You have killed the {monsterInState.name} and gained{' '}
+        <span style={{ color: '#1890ff' }}>{monsterInState.experience}</span>{' '}
+        experience{' '}
         {gold ? (
           <>
-            {" "}
-            and <span style={{ color: "#ffd700" }}> {gold} </span> gold.
+            {' '}
+            and <span style={{ color: '#ffd700' }}> {gold} </span> gold.
           </>
         ) : (
           <></>
@@ -184,6 +188,8 @@ function FightPage({ player, monster }: IFightPageProps) {
     savePlayer();
   };
 
+  // Handle  player lose
+  //
   const playerLose = () => {
     const lostExp = Math.round(
       (playerInState.experience / playerInState.experienceToLevelUp) * 100
@@ -208,8 +214,8 @@ function FightPage({ player, monster }: IFightPageProps) {
     setBattleLog([
       ...battleLog,
       <span>
-        You <b>died</b> to {monsterInState.name} and lost{" "}
-        <span style={{ color: "#1890ff" }}>{monsterInState.experience}</span>{" "}
+        You <b>died</b> to {monsterInState.name} and lost{' '}
+        <span style={{ color: '#1890ff' }}>{monsterInState.experience}</span>{' '}
         experience
       </span>,
     ]);
@@ -221,37 +227,39 @@ function FightPage({ player, monster }: IFightPageProps) {
     savePlayer();
   };
 
+  // Handle the combat log
   const handleBattleLog = (
-    playerOrMonster: "player" | "monster",
+    playerOrMonster: 'player' | 'monster',
     dmg: number,
     weaponName?
   ) => {
-    if (playerOrMonster === "player") {
+    if (playerOrMonster === 'player') {
       // Text for display
       //
       setBattleLog([
         ...battleLog,
         <span>
           Your {weaponName} hit {monsterInState.name} for
-          <span style={{ color: "green" }}> {dmg}</span> damage.
+          <span style={{ color: 'green' }}> {dmg}</span> damage.
         </span>,
       ]);
-    } else if (playerOrMonster === "monster") {
+    } else if (playerOrMonster === 'monster') {
       setBattleLog([
         ...battleLog,
         <span>
           The {monsterInState.name} hit you for
-          {<span style={{ color: "red" }}> {dmg}</span>} damage.
+          {<span style={{ color: 'red' }}> {dmg}</span>} damage.
         </span>,
       ]);
     }
   };
 
+  // Always keep the combat log scrolling
   useEffect(() => {
     dummyRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "start",
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'start',
     });
   }, [battleLog]);
 
@@ -282,7 +290,7 @@ function FightPage({ player, monster }: IFightPageProps) {
               calculatedMinimumDamage
           );
 
-          setPlayerHit({ dmg: upcomingHit, slot: "mainhand" });
+          setPlayerHit({ dmg: upcomingHit, slot: 'mainhand' });
 
           if (monsterInState.health > 0 && playerInState.health > 0) {
             // Text for display
@@ -291,7 +299,7 @@ function FightPage({ player, monster }: IFightPageProps) {
               ...battleLog,
               <span>
                 Your {playerMainhand.name} hit {monsterInState.name} for
-                <span style={{ color: "green" }}> {upcomingHit}</span> damage.
+                <span style={{ color: 'green' }}> {upcomingHit}</span> damage.
               </span>,
             ]);
           }
@@ -318,7 +326,7 @@ function FightPage({ player, monster }: IFightPageProps) {
               calculatedMinimumDamage
           );
 
-          setPlayerHit({ dmg: upcomingHit, slot: "offhand" });
+          setPlayerHit({ dmg: upcomingHit, slot: 'offhand' });
 
           if (monsterInState.health > 0 && playerInState.health > 0) {
             // Text for display
@@ -327,7 +335,7 @@ function FightPage({ player, monster }: IFightPageProps) {
               ...battleLog,
               <span>
                 Your {playerOffhandInterval.name} hit {monsterInState.name} for
-                <span style={{ color: "green" }}> {upcomingHit}</span> damage.
+                <span style={{ color: 'green' }}> {upcomingHit}</span> damage.
               </span>,
             ]);
           }
@@ -353,14 +361,15 @@ function FightPage({ player, monster }: IFightPageProps) {
               calculatedMinimumDamage
           );
 
-          setPlayerHit({ dmg: upcomingHit, slot: "twohanded" });
+          setPlayerHit({ dmg: upcomingHit, slot: 'twohanded' });
         }, playerTwoHanded.attackSpeed * 1000)
       );
     }
   };
 
+  // PlayerAttack use effect
+  //
   useEffect(() => {
-    console.log(globalCD, "globalCd");
     if (globalCD) {
       return;
     }
@@ -374,14 +383,14 @@ function FightPage({ player, monster }: IFightPageProps) {
 
       if (playerDuelWielding) {
         handleBattleLog(
-          "player",
+          'player',
           playerHit.dmg,
-          playerHit.slot === "mainhand"
+          playerHit.slot === 'mainhand'
             ? playerMainhand.name
             : playerOffhand.name
         );
       } else {
-        handleBattleLog("player", playerHit.dmg, playerTwoHanded.name);
+        handleBattleLog('player', playerHit.dmg, playerTwoHanded.name);
       }
     }
 
@@ -407,6 +416,8 @@ function FightPage({ player, monster }: IFightPageProps) {
     );
   };
 
+  //  Monster attack useEffect
+  //
   useEffect(() => {
     if (playerInState.health <= 0) {
       setPlayerInState({
@@ -419,7 +430,7 @@ function FightPage({ player, monster }: IFightPageProps) {
     }
 
     if (playerInState.health > 0 && monsterInState.health > 0) {
-      handleBattleLog("monster", monsterHit);
+      handleBattleLog('monster', monsterHit);
       setPlayerInState({
         ...playerInState,
         health: (playerInState.health -= monsterHit),
@@ -428,6 +439,7 @@ function FightPage({ player, monster }: IFightPageProps) {
   }, [monsterHit]);
 
   // Start fight again
+  //
   const startReFight = () => {
     setMonster({
       ...monsterInState,
@@ -438,6 +450,7 @@ function FightPage({ player, monster }: IFightPageProps) {
     startFight();
   };
 
+  // Start the fight
   const startFight = () => {
     setBattleLog([]);
     if (playerInState.health > 0 && monsterInState.health > 0) {
@@ -448,11 +461,13 @@ function FightPage({ player, monster }: IFightPageProps) {
     } else if (monsterInState.health < 0) {
       message.error("You can't kill what is already dead.");
     } else {
-      message.error("You are dead.");
+      message.error('You are dead.');
     }
     setFightStarted(false);
   };
 
+  // Save player on destroy and start fight on enter
+  //
   useEffect(() => {
     startFight();
 
@@ -463,14 +478,19 @@ function FightPage({ player, monster }: IFightPageProps) {
 
   const handleGlobalCD = () => {
     setTimeout(() => {
-      console.log("globalCD OFF");
+      console.log('globalCD OFF');
       setGlobalCD(false);
-    }, 5000);
+    }, 1500);
   };
 
+  // Handlesglobal cd on globalCD change
+  //
   useEffect(() => {
     handleGlobalCD();
   }, [globalCD]);
+
+
+
   return (
     <SiteLayout player={playerInState}>
       <Row>
@@ -485,7 +505,7 @@ function FightPage({ player, monster }: IFightPageProps) {
             style={{
               height: 350,
               width: 300,
-              overflowY: "hidden",
+              overflowY: 'hidden',
               padding: 16,
             }}
           >
