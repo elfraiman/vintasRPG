@@ -5,16 +5,15 @@ import prisma from "../../../lib/prisma";
 
 // PUT /api/publish/:id
 export default async function handle(req, res) {
-  console.log(req.query, 'req');
+  console.log(req.query, "req");
   const player: IPlayer = JSON.parse(req.body);
-  delete player['inventory']
-  delete player['equipement']
+  delete player["inventory"];
+  delete player["equipement"];
 
   const playerObj: IPlayer = JSON.parse(req.body);
 
-  playerObj.inventory.forEach(async slot => {
-    
-    await prisma.player.update({
+  playerObj.inventory.forEach(async (slot) => {
+    const result = await prisma.player.update({
       where: {
         id: player.id,
       },
@@ -24,16 +23,16 @@ export default async function handle(req, res) {
         inventory: {
           update: {
             where: {
-              id: slot.id
+              id: slot.id,
             },
             data: {
-              itemQuantity: slot.itemQuantity
-            }
-          }
+              itemQuantity: slot.itemQuantity,
+            },
+          },
         },
       },
-    })
-      .catch((error) => console.error(error));
-  })
+    });
 
+    res.json(result);
+  });
 }

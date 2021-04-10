@@ -34,7 +34,7 @@ const PlayerCard = ({ player }: IPlayerCardProps) => {
       <Card
         title={player.name}
         style={{
-          width: 300,
+          width: "100%",
           minHeight: 350,
           display: "flex",
           flexDirection: "column",

@@ -1,11 +1,11 @@
 import { Player } from "@prisma/client";
 import { Button, Card, Col, message, Row } from "antd";
+import { cloneDeep } from "lodash";
 import { getSession, useSession } from "next-auth/client";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import SiteLayout from "../components/SiteLayout";
 import { getPlayer } from "../lib/functions";
-import { cloneDeep } from "lodash";
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
@@ -79,12 +79,11 @@ const ChurchPage = (props) => {
     await fetch(`http://localhost:3000/api/player/${props.player.id}`, {
       method: "POST",
       body: JSON.stringify(player),
-    }).then(async (response) => {
+    }).then(async () => {
       message.success(`You've been healed and payed ${cost} gold, don't let it happen again...`);
       setPriestText(
         `Good luck ${player.name}, don't try to avoid death or you'll end up avoiding life.`
       );
-
       // sets the player to itself to trigger a re-render
       setPlayer({ ...player });
     });

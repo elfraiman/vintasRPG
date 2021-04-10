@@ -10,7 +10,7 @@ import { getPlayer, IPlayer } from "../lib/functions";
 
 interface IFightCatalogueProps {
   monsters: Monster[];
-  player: IPlayer
+  player: IPlayer;
 }
 
 export const getServerSideProps = async (context) => {
@@ -41,19 +41,24 @@ const FightCatalogue = ({ monsters, player }: IFightCatalogueProps) => {
       <Row>
         <h2>Known Monsters</h2>
       </Row>
-      <Row>
+      <div
+        style={{
+          display: "grid",
+          gridTemplate: "auto / 1fr 1fr 1fr",
+          gridGap: 16,
+        }}
+      >
         {sortedMonsters.map((monster) => {
           return (
-            <Col key={monster.id} span={8}>
-              <MonsterCard
-                monster={monster}
-                showAttack={true}
-                hideHpBar={true}
-              />
-            </Col>
+            <MonsterCard
+              key={monster.id}
+              monster={monster}
+              showAttack={true}
+              hideHpBar={true}
+            />
           );
         })}
-      </Row>
+      </div>
     </SiteLayout>
   );
 };

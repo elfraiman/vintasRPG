@@ -32,7 +32,7 @@ const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
       <Card
         title={monster.name}
         style={{
-          width: 300,
+          width: "100%",
           height: 350,
           display: "flex",
           flexDirection: "column",
