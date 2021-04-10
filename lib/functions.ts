@@ -25,6 +25,7 @@ export interface IItem {
   description: string | null
   itemTypeId: number
   imageName: string | null
+  effectAmount: number
   itemType: ItemType
 }
 

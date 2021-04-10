@@ -3,6 +3,7 @@ import { Button, Card, Col, message, Row } from "antd";
 import { cloneDeep } from "lodash";
 import { getSession, useSession } from "next-auth/client";
 import React, { useEffect, useRef, useState } from "react";
+import InventoryCard from "../components/InventoryComponent";
 import MonsterCard from "../components/MonsterCard";
 import PlayerCard from "../components/PlayerCard";
 import SiteLayout from "../components/SiteLayout";
@@ -48,12 +49,30 @@ export const getServerSideProps = async (context) => {
 
 function FightPage({ player, monster }: IFightPageProps) {
   const [session, loading] = useSession();
-  const [playerInState, setPlayerInState] = useState<Player>(player);
+  const [playerInState, setPlayerInState] = useState<IPlayer>(
+    cloneDeep(player)
+  );
   const [monsterInState, setMonster] = useState<Monster>(cloneDeep(monster));
-  const [battleLog, setBattleLog] = useState<string[]>([]);
+  const [battleLog, setBattleLog] = useState<any>([]);
   const [fightStarted, setFightStarted] = useState<boolean>(false);
+  const [globalCD, setGlobalCD] = useState<boolean>(false);
+  const [playerHit, setPlayerHit] = useState({ dmg: 0, slot: "" });
+  const [playerTwohandInterval, setPlayerTwoHandInterval] = useState<any>();
+  const [playerMainhandInterval, setPlayerMainHandInterval] = useState<any>();
+  const [playerOffhandInterval, setPlayerOffhandInterval] = useState<any>();
+  const [monsterInterval, setMonsterInterval] = useState<any>();
+  const [monsterHit, setMonsterHit] = useState<number>(null);
 
-  let battleLogContainer = [];
+  let playerMainhand = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.MAINHAND
+  )?.item;
+  let playerOffhand = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.OFFHAND
+  )?.item;
+  const playerTwoHanded = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.TWOHANDED
+  )?.item;
+  const playerDuelWielding = playerMainhand && playerOffhand;
 
   // Dummy ref to keep scrolling in the combat log
   //
@@ -66,11 +85,9 @@ function FightPage({ player, monster }: IFightPageProps) {
       </React.Fragment>
     );
 
-
-    // save the local state player to the back-end
-    //
+  // save the local state player to the back-end
+  //
   const savePlayer = async () => {
-    console.log(playerInState, "instate");
     await fetch(`http://localhost:3000/api/player/${player.id}`, {
       method: "POST",
       body: JSON.stringify(playerInState),
@@ -78,7 +95,6 @@ function FightPage({ player, monster }: IFightPageProps) {
       console.log(response);
     });
   };
-
 
   // 1 of 3 chance to loot gold
   // calculate gold loot with multiplier
@@ -97,7 +113,7 @@ function FightPage({ player, monster }: IFightPageProps) {
 
   const levelUpPlayer = () => {
     // Calculate hp gained from leveling using
-    // con multiplier 
+    // con multiplier
     //
     const healthToGain =
       Math.round(
@@ -105,13 +121,12 @@ function FightPage({ player, monster }: IFightPageProps) {
           playerInState.maxHealth * 1.1
       ) - playerInState.maxHealth;
 
-
-      // Calculate next xp to level
+    // Calculate next xp to level
     const nextExpToLevelUp = Math.floor(
       (playerInState.experienceToLevelUp *= MULTIPLIERS.LEVELUPEXPMULTIPLIER)
     );
 
-    // Add level, calculate next xp to level, set xp to 0, calculate new max health and 
+    // Add level, calculate next xp to level, set xp to 0, calculate new max health and
     // set current health to maxHealth
     setPlayerInState({
       ...playerInState,
@@ -142,7 +157,7 @@ function FightPage({ player, monster }: IFightPageProps) {
 
     setFightStarted(false);
     setBattleLog([
-      ...battleLogContainer,
+      ...battleLog,
       <span>
         You have killed the {monsterInState.name} and gained{" "}
         <span style={{ color: "#1890ff" }}>{monsterInState.experience}</span>{" "}
@@ -191,7 +206,7 @@ function FightPage({ player, monster }: IFightPageProps) {
     setFightStarted(false);
 
     setBattleLog([
-      ...battleLogContainer,
+      ...battleLog,
       <span>
         You <b>died</b> to {monsterInState.name} and lost{" "}
         <span style={{ color: "#1890ff" }}>{monsterInState.experience}</span>{" "}
@@ -201,24 +216,34 @@ function FightPage({ player, monster }: IFightPageProps) {
     message.error(
       `You died to the ${monsterInState.name} and lost ${monsterInState.experience} experience`
     );
-    
+
     // Saves the local obj to the backend;
     savePlayer();
   };
 
   const handleBattleLog = (
     playerOrMonster: "player" | "monster",
-    dmg: number
+    dmg: number,
+    weaponName?
   ) => {
     if (playerOrMonster === "player") {
+      // Text for display
+      //
+      setBattleLog([
+        ...battleLog,
+        <span>
+          Your {weaponName} hit {monsterInState.name} for
+          <span style={{ color: "green" }}> {dmg}</span> damage.
+        </span>,
+      ]);
     } else if (playerOrMonster === "monster") {
-      battleLogContainer.push([
+      setBattleLog([
+        ...battleLog,
         <span>
           The {monsterInState.name} hit you for
           {<span style={{ color: "red" }}> {dmg}</span>} damage.
         </span>,
       ]);
-      setBattleLog(battleLogContainer);
     }
   };
 
@@ -228,178 +253,179 @@ function FightPage({ player, monster }: IFightPageProps) {
       block: "nearest",
       inline: "start",
     });
-  }, [battleLogContainer, battleLog]);
+  }, [battleLog]);
 
+  // Handle setting intervals to state;
+  //
   const doPlayerAttack = () => {
-    let playerMainhand = player.equipement.find(
-      (equip) => equip.slot.type === WEAPONTYPES.MAINHAND
-    )?.item;
-    let playerOffhand = player.equipement.find(
-      (equip) => equip.slot.type === WEAPONTYPES.OFFHAND
-    )?.item;
-    const playerTwoHanded = player.equipement.find(
-      (equip) => equip.slot.type === WEAPONTYPES.TWOHANDED
-    )?.item;
-
-    const playerDuelWielding = playerMainhand && playerOffhand;
-
     if (playerDuelWielding) {
       // Main hand hit
       //
 
-      const hitMainHand = setInterval(() => {
-        // If player is duel wielding we cant to create
-        // more hits.
-        //
-        const calculatedTotalDamage =
-          playerInState.strength * STATSMULTIPLIERS.STR +
-          playerMainhand.maxDamage;
-        const calculatedMinimumDamage =
-          playerInState.strength * STATSMULTIPLIERS.STR +
-          playerMainhand.minDamage;
-
-        const upcomingHit = Math.floor(
-          Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
-            calculatedMinimumDamage
-        );
-
-        if (monsterInState.health > 0 && playerInState.health > 0) {
-          // Text for display
-          //
-          battleLogContainer.push([
-            <span>
-              Your {playerMainhand.name} hit {monsterInState.name} for
-              <span style={{ color: "green" }}> {upcomingHit}</span> damage.
-            </span>,
-          ]);
-          setBattleLog(battleLogContainer);
-
-          // Set monster stats after hit
-          setMonster({
-            ...monsterInState,
-            health: (monsterInState.health -= upcomingHit),
-          });
-
-          if (monsterInState.health <= 0) {
-            playerWin();
-            clearInterval(hitOffhand);
-            clearInterval(hitMainHand);
+      setPlayerMainHandInterval(
+        setInterval(() => {
+          if (globalCD) {
+            return;
           }
-        }
-      }, playerMainhand.attackSpeed * 1000);
-
-      const hitOffhand = setInterval(() => {
-        // If player is duel wielding we cant to create
-        // more hits.
-        //
-
-        const calculatedTotalDamage =
-          playerInState.strength * STATSMULTIPLIERS.STR +
-          playerOffhand.maxDamage;
-        const calculatedMinimumDamage =
-          playerInState.strength * STATSMULTIPLIERS.STR +
-          playerOffhand.minDamage;
-
-        const upcomingHit = Math.floor(
-          Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
-            calculatedMinimumDamage
-        );
-
-        if (monsterInState.health > 0 && playerInState.health > 0) {
-          // Set offhand hit text display
+          // If player is duel wielding we cant to create
+          // more hits.
           //
-          battleLogContainer.push([
-            <span>
-              Your {playerOffhand.name} hit {monsterInState.name} for
-              <span style={{ color: "green" }}> {upcomingHit} </span> damage.
-            </span>,
-          ]);
-          setBattleLog(battleLogContainer);
+          const calculatedTotalDamage =
+            playerInState.strength * STATSMULTIPLIERS.STR +
+            playerMainhand.maxDamage;
+          const calculatedMinimumDamage =
+            playerInState.strength * STATSMULTIPLIERS.STR +
+            playerMainhand.minDamage;
 
-          setMonster({
-            ...monsterInState,
-            health: (monsterInState.health -= upcomingHit),
-          });
-        }
+          const upcomingHit = Math.floor(
+            Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
+              calculatedMinimumDamage
+          );
 
-        if (monsterInState.health <= 0) {
-          playerWin();
-          clearInterval(hitOffhand);
-          clearInterval(hitMainHand);
-        }
-      }, playerOffhand.attackSpeed * 1000);
+          setPlayerHit({ dmg: upcomingHit, slot: "mainhand" });
+
+          if (monsterInState.health > 0 && playerInState.health > 0) {
+            // Text for display
+            //
+            setBattleLog([
+              ...battleLog,
+              <span>
+                Your {playerMainhand.name} hit {monsterInState.name} for
+                <span style={{ color: "green" }}> {upcomingHit}</span> damage.
+              </span>,
+            ]);
+          }
+        }, playerMainhand.attackSpeed * 1000)
+      );
+
+      setPlayerOffhandInterval(
+        setInterval(() => {
+          if (globalCD) {
+            return;
+          }
+          // If player is duel wielding we cant to create
+          // more hits.
+          //
+          const calculatedTotalDamage =
+            playerInState.strength * STATSMULTIPLIERS.STR +
+            playerOffhandInterval.maxDamage;
+          const calculatedMinimumDamage =
+            playerInState.strength * STATSMULTIPLIERS.STR +
+            playerOffhandInterval.minDamage;
+
+          const upcomingHit = Math.floor(
+            Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
+              calculatedMinimumDamage
+          );
+
+          setPlayerHit({ dmg: upcomingHit, slot: "offhand" });
+
+          if (monsterInState.health > 0 && playerInState.health > 0) {
+            // Text for display
+            //
+            setBattleLog([
+              ...battleLog,
+              <span>
+                Your {playerOffhandInterval.name} hit {monsterInState.name} for
+                <span style={{ color: "green" }}> {upcomingHit}</span> damage.
+              </span>,
+            ]);
+          }
+        }, playerOffhandInterval.attackSpeed * 1000)
+      );
     } else {
       // 2 handed hit
       //
-      const twoHandedHit = setInterval(() => {
-        // If player is duel wielding we cant to create
-        // more hits.
-        //
-
-        const calculatedTotalDamage =
-          playerInState.strength * STATSMULTIPLIERS.STR +
-          playerTwoHanded.maxDamage;
-        const calculatedMinimumDamage =
-          playerInState.strength * STATSMULTIPLIERS.STR +
-          playerTwoHanded.minDamage;
-
-        const upcomingHit = Math.floor(
-          Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
-            calculatedMinimumDamage
-        );
-
-        if (monsterInState.health > 0 && playerInState.health > 0) {
-          // Text for display
+      setPlayerTwoHandInterval(
+        setInterval(() => {
+          // If player is duel wielding we cant to create
+          // more hits.
           //
-          battleLogContainer.push([
-            <span>
-              Your {playerTwoHanded.name} hit {monsterInState.name} for
-              <span style={{ color: "green" }}> {upcomingHit}</span> damage.
-            </span>,
-          ]);
-          setBattleLog(battleLogContainer);
+          const calculatedTotalDamage =
+            playerInState.strength * STATSMULTIPLIERS.STR +
+            playerTwoHanded.maxDamage;
+          const calculatedMinimumDamage =
+            playerInState.strength * STATSMULTIPLIERS.STR +
+            playerTwoHanded.minDamage;
 
-          // Set monster stats after hit
-          setMonster({
-            ...monsterInState,
-            health: (monsterInState.health -= upcomingHit),
-          });
-        }
+          const upcomingHit = Math.floor(
+            Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
+              calculatedMinimumDamage
+          );
 
-        if (monsterInState.health <= 0) {
-          playerWin();
-          clearInterval(twoHandedHit);
-        }
-      }, playerTwoHanded.attackSpeed * 1000);
+          setPlayerHit({ dmg: upcomingHit, slot: "twohanded" });
+        }, playerTwoHanded.attackSpeed * 1000)
+      );
     }
   };
 
+  useEffect(() => {
+    console.log(globalCD, "globalCd");
+    if (globalCD) {
+      return;
+    }
+
+    if (monsterInState.health > 0 && playerInState.health > 0) {
+      // Set monster stats after hit
+      setMonster({
+        ...monsterInState,
+        health: (monsterInState.health -= playerHit.dmg),
+      });
+
+      if (playerDuelWielding) {
+        handleBattleLog(
+          "player",
+          playerHit.dmg,
+          playerHit.slot === "mainhand"
+            ? playerMainhand.name
+            : playerOffhand.name
+        );
+      } else {
+        handleBattleLog("player", playerHit.dmg, playerTwoHanded.name);
+      }
+    }
+
+    if (monsterInState.health <= 0) {
+      playerWin();
+      clearInterval(playerTwohandInterval);
+      clearInterval(playerMainhandInterval);
+      clearInterval(playerOffhandInterval);
+    }
+  }, [playerHit]);
+
   const doMonsterAttack = () => {
-    const fight = setInterval(() => {
-      if (playerInState.health <= 0) {
-        setPlayerInState({
-          ...playerInState,
-          health: (playerInState.health = 0),
-        });
+    setMonsterInterval(
+      setInterval(() => {
+        const upcomingHit = Math.floor(
+          Math.random() *
+            (monsterInState.maxDamage - monsterInState.minDamage) +
+            monsterInState.minDamage
+        );
 
-        playerLose();
-        clearInterval(fight);
-      }
-
-      const upcomingHit = Math.floor(
-        Math.random() * (monsterInState.maxDamage - monsterInState.minDamage) +
-          monsterInState.minDamage
-      );
-
-      if (playerInState.health > 0 && monsterInState.health > 0) {
-        handleBattleLog("monster", upcomingHit);
-        setPlayerInState({
-          ...playerInState,
-          health: (playerInState.health -= upcomingHit),
-        });
-      }
-    }, monsterInState.attackSpeed * 1000);
+        setMonsterHit(upcomingHit);
+      }, monsterInState.attackSpeed * 1000)
+    );
   };
+
+  useEffect(() => {
+    if (playerInState.health <= 0) {
+      setPlayerInState({
+        ...playerInState,
+        health: (playerInState.health = 0),
+      });
+
+      playerLose();
+      clearInterval(monsterInterval);
+    }
+
+    if (playerInState.health > 0 && monsterInState.health > 0) {
+      handleBattleLog("monster", monsterHit);
+      setPlayerInState({
+        ...playerInState,
+        health: (playerInState.health -= monsterHit),
+      });
+    }
+  }, [monsterHit]);
 
   // Start fight again
   const startReFight = () => {
@@ -413,7 +439,6 @@ function FightPage({ player, monster }: IFightPageProps) {
   };
 
   const startFight = () => {
-    battleLogContainer = [];
     setBattleLog([]);
     if (playerInState.health > 0 && monsterInState.health > 0) {
       doPlayerAttack();
@@ -430,8 +455,22 @@ function FightPage({ player, monster }: IFightPageProps) {
 
   useEffect(() => {
     startFight();
+
+    return () => {
+      savePlayer();
+    };
   }, []);
 
+  const handleGlobalCD = () => {
+    setTimeout(() => {
+      console.log("globalCD OFF");
+      setGlobalCD(false);
+    }, 5000);
+  };
+
+  useEffect(() => {
+    handleGlobalCD();
+  }, [globalCD]);
   return (
     <SiteLayout player={playerInState}>
       <Row>
@@ -466,6 +505,16 @@ function FightPage({ player, monster }: IFightPageProps) {
         </Col>
         <Col span={8}>
           <MonsterCard monster={monsterInState} />
+        </Col>
+      </Row>
+
+      <Row>
+        <Col>
+          <InventoryCard
+            player={playerInState}
+            setPlayer={setPlayerInState}
+            setGlobalCD={setGlobalCD}
+          />
         </Col>
       </Row>
     </SiteLayout>

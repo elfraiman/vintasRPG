@@ -71,6 +71,7 @@ model Item {
   attackSpeed  Float?
   cost         Int?
   armor        Int?
+  effectAmount Int?
   tier         String?
   description  String?
   itemType     ItemType      @relation(fields: [itemTypeId], references: [id])
