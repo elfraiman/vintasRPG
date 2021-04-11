@@ -2,8 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 generator client {
@@ -24,34 +25,28 @@ model User {
   @@map(name: "users")
 }
 
-model Inventory {
-  id     Int    @id @default(autoincrement())
-  weapon Weapon @relation(fields: [weaponId], references: [id])
-
-  weaponId Int
-  Player   Player[]
-  @@map(name: "inventory")
-}
-
 model Player {
-  id                  Int       @id @default(autoincrement())
-  name                String?   @unique
-  user                User      @relation(fields: [userId], references: [id])
-  userId              Int       @unique
+  id                  Int           @id @default(autoincrement())
+  name                String?       @unique
+  user                User          @relation(fields: [userId], references: [id])
+  userId              Int           @unique
   strength            Int
   dexterity           Int
   constitution        Int
   intelligence        Int
-  weightLimit         Int       @default(100)
-  health              Int       @default(10)
-  maxHealth           Int       @default(10)
+  weightLimit         Int           @default(100) // Since its not static, maybe do the calculation on loading a player.
+  health              Int           @default(10)
+  maxHealth           Int           @default(10)
   defense             Int
   damageReduction     Int
   evasion             Int
   experience          Int
-  experienceToLevelUp Int       @default(300)
-  level               Int       @default(1)
-  inventory           Inventory @relation(fields: [inventoryId], references: [id])
+  experienceToLevelUp Int           @default(300)
+  level               Int           @default(1)
+  inventory           Inventory[]
+  maxInventorySlots   Int           @default(16)
+  equipement          PlayerEquip[]
+  gold                Int           @default(500)
 
   inventoryId Int
   @@map(name: "players")
@@ -65,18 +60,63 @@ model Currencies {
   @@map(name: "currenices")
 }
 
-model Weapon {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
-  description String?
-  minDamage   Int
-  maxDamage   Int
-  cost        Int
-  weight      Float
-  tier        String
+model Item {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  weight       Float
+  maximumStack Int
+  inventory    Inventory[]
+  minDamage    Int?
+  maxDamage    Int?
+  attackSpeed  Float?
+  cost         Int?
+  armor        Int?
+  effectAmount Int?
+  tier         String?
+  description  String?
+  itemType     ItemType      @relation(fields: [itemTypeId], references: [id])
+  itemTypeId   Int
+  playerEquip  PlayerEquip[]
+  imageName    String?
+}
 
-  Inventory Inventory[]
-  @@map(name: "weapons")
+model ItemType {
+  id          Int     @id @default(autoincrement())
+  type        String
+  displayName String
+  subType     String?
+  items       Item[]
+}
+
+model Inventory {
+  id           Int    @id @default(autoincrement())
+  itemId       Int
+  itemQuantity Int
+  item         Item   @relation(fields: [itemId], references: [id])
+  playerId     Int
+  player       Player @relation(fields: [playerId], references: [id])
+
+  @@map(name: "inventory")
+}
+
+model EquipSlotTypes {
+  id                 Int           @id @default(autoincrement())
+  maximumUsableSlots Int           @default(1)
+  type               String        @default("")
+  displayName        String
+  playerEquips       PlayerEquip[]
+}
+
+model PlayerEquip {
+  id       Int            @id @default(autoincrement())
+  playerId Int
+  player   Player         @relation(fields: [playerId], references: [id])
+  item     Item           @relation(fields: [itemId], references: [id])
+  itemId   Int
+  slotId   Int
+  slot     EquipSlotTypes @relation(fields: [slotId], references: [id])
+
+  @@map(name: "equipement")
 }
 
 model DropCollection {
@@ -91,8 +131,9 @@ model Monster {
   id                 Int     @id @default(autoincrement())
   name               String? @unique
   health             Int
-  maxHealth          Int @default(10)
-  armor              Int
+  maxHealth          Int     @default(10)
+  attackSpeed        Float   @default(2.0)
+  armor              Float
   damageReduction    Int
   evasion            Int
   experience         Int
@@ -100,6 +141,7 @@ model Monster {
   minDamage          Int
   maxDamage          Int
   currencyMultiplier Float   @default(1.1)
+  goldDrop           Int     @default(5)
 
   @@map(name: "monsters")
 }

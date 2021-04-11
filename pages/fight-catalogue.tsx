@@ -4,13 +4,29 @@ import { Monster } from "@prisma/client";
 import React from "react";
 import MonsterCard from "../components/MonsterCard";
 import { Col, Row } from "antd";
+import SiteLayout from "../components/SiteLayout";
+import { getPlayer, IPlayer } from "../lib/functions";
 // index.tsx
 
 interface IFightCatalogueProps {
   monsters: Monster[];
+  player: IPlayer;
 }
 
-const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
+export const getServerSideProps = async (context) => {
+  const session = await getSession(context);
+
+  if (session) {
+    const player = await getPlayer(session.userId);
+    const monsters = await prisma.monster.findMany();
+
+    return { props: { monsters, player } };
+  } else {
+    return { props: {} };
+  }
+};
+
+const FightCatalogue = ({ monsters, player }: IFightCatalogueProps) => {
   const [session, loading] = useSession();
 
   if (!loading && !session)
@@ -21,33 +37,30 @@ const FightCatalogue = ({ monsters }: IFightCatalogueProps) => {
     );
   const sortedMonsters = monsters.sort((a, b) => (a.level > b.level ? 1 : -1));
   return (
-    <React.Fragment>
+    <SiteLayout player={player}>
       <Row>
         <h2>Known Monsters</h2>
       </Row>
-      <Row>
+      <div
+        style={{
+          display: "grid",
+          gridTemplate: "auto / 1fr 1fr 1fr",
+          gridGap: 16,
+        }}
+      >
         {sortedMonsters.map((monster) => {
           return (
-            <Col key={monster.id} span={8}>
-              <MonsterCard monster={monster} showAttack={true} />
-            </Col>
+            <MonsterCard
+              key={monster.id}
+              monster={monster}
+              showAttack={true}
+              hideHpBar={true}
+            />
           );
         })}
-      </Row>
-    </React.Fragment>
+      </div>
+    </SiteLayout>
   );
-};
-
-export const getServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  if (session) {
-    const monsters = await prisma.monster?.findMany();
-
-    return { props: { monsters } };
-  } else {
-    return { props: {} };
-  }
 };
 
 export default FightCatalogue;

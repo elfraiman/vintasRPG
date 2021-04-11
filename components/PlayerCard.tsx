@@ -1,50 +1,70 @@
-import { Player, Weapon } from "@prisma/client";
+import { Player } from "@prisma/client";
 import { Card, Progress } from "antd";
 import { useSession } from "next-auth/client";
 import React from "react";
-
-export interface IFullPlayer {
-  player: Player;
-  equipement: {
-    weapon: Weapon;
-  };
-}
+import { IPlayer } from "../lib/functions";
+import { WEAPONTYPES } from "../pages/fight";
 
 interface IPlayerCardProps {
-  fullPlayer: IFullPlayer;
-  hit?: number;
+  player: IPlayer;
 }
 
-const PlayerCard = ({ fullPlayer, hit }: IPlayerCardProps) => {
+const PlayerCard = ({ player }: IPlayerCardProps) => {
   const [session, loading] = useSession();
-  let equipement;
-  let player: Player;
+  let playerMainhand = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.MAINHAND
+  )?.item;
+  let playerOffhand = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.OFFHAND
+  )?.item;
+  const playerTwoHanded = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.TWOHANDED
+  )?.item;
 
-  if (!fullPlayer) return null;
+  if (!player) return null;
   if (!loading && !session) return null;
-
-  equipement = fullPlayer.equipement;
-  player = fullPlayer.player;
 
   const calculatePercentHealth = (cur: number, max: number) => {
     const p = cur / max;
     const result = p * 100;
-    return result;
+    return Math.round(result);
   };
 
   const calculateExperience = (cur: number, max: number) => {
     const p = cur / max;
     const result = p * 100;
-    return result;
+    return Math.round(result);
   };
 
+  const playerWeaponInfo = () => {
+    let text;
+
+    if (playerTwoHanded) {
+      text = (
+        <b>
+          {playerTwoHanded.name} ({playerTwoHanded.minDamage}-
+          {playerTwoHanded.maxDamage})
+        </b>
+      );
+    } else {
+      text = (
+        <b>
+          Mainhand: {playerMainhand.name} ({playerMainhand.minDamage}-
+          {playerMainhand.maxDamage}) <br/> Offhand: {playerOffhand.name} (
+          {playerOffhand.minDamage}-{playerOffhand.maxDamage})
+        </b>
+      );
+    }
+
+    return text;
+  };
   return (
     <React.Fragment>
       <Card
         title={player.name}
         style={{
-          width: 300,
-          minHeight: 300,
+          width: "100%",
+          minHeight: 350,
           display: "flex",
           flexDirection: "column",
         }}
@@ -58,7 +78,7 @@ const PlayerCard = ({ fullPlayer, hit }: IPlayerCardProps) => {
             player.experienceToLevelUp
           )}
           type="line"
-          showInfo={false}
+          showInfo={true}
         />
         <p style={{ marginBottom: 0 }}>
           Health: {player.health} / {player.maxHealth}
@@ -73,11 +93,7 @@ const PlayerCard = ({ fullPlayer, hit }: IPlayerCardProps) => {
               : "success"
           }
         />
-        {hit}
-        <p>
-          {equipement.weapon.name} ({equipement.weapon.minDamage}-
-          {equipement.weapon.maxDamage})
-        </p>
+        <p>{playerWeaponInfo()}</p>
       </Card>
     </React.Fragment>
   );

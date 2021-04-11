@@ -1,34 +1,7 @@
-import { Col, Row } from 'antd';
-import { getSession, useSession } from 'next-auth/client';
-import React, { useState } from 'react';
-import PlayerCard, { IFullPlayer } from '../components/PlayerCard';
-import prisma from '../lib/prisma';
-
-
-function HomePage(props) {
-  const [session, loading] = useSession();
-  const [fullPlayer,] = useState<IFullPlayer>(props.fullPlayer);
-
-  if (!loading && !session)
-    return (
-      <React.Fragment>
-        <p>Access Denied</p>
-      </React.Fragment>
-    );
-
-
-
-  return (
-    <React.Fragment>
-      <Row>
-        <Col span={24}>
-          <PlayerCard fullPlayer={fullPlayer} />
-        </Col>
-      </Row>
-
-    </React.Fragment>
-  );
-}
+import { getSession } from "next-auth/client";
+import React from "react";
+import SiteLayout from "../components/SiteLayout";
+import prisma from "../lib/prisma";
 
 // index.tsx
 export const getServerSideProps = async (context) => {
@@ -39,22 +12,18 @@ export const getServerSideProps = async (context) => {
       where: { userId: session?.userId },
     });
 
-    const fullPlayer: IFullPlayer = {
-      player: player,
-      equipement: {
-        weapon: await prisma.player
-          ?.findFirst({
-            where: { userId: session?.userId },
-          })
-          .inventory()
-          .weapon(),
-      },
-    };
-
-    return { props: { fullPlayer} };
+    return { props: { player } };
   } else {
     return { props: {} };
   }
 };
+
+function HomePage(props) {
+  return (
+    <SiteLayout player={props.player}>
+      <React.Fragment></React.Fragment>
+    </SiteLayout>
+  );
+}
 
 export default HomePage;
