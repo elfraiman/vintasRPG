@@ -158,10 +158,6 @@ function FightPage({ player, monster }: IFightPageProps) {
       experience: (playerInState.experience += monsterInState.experience),
       gold: gold ? (playerInState.gold += gold) : playerInState.gold,
     });
-    message.config({
-      duration: 2,
-      maxCount: 3,
-    });
 
     if (gold) {
       message.success({

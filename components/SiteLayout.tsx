@@ -77,7 +77,7 @@ const SiteLayout = ({ children, player }: ISiteLayoutProps) => {
             <span style={{ marginLeft: 16 }}>Church</span>
           </Menu.Item>
 
-          <Divider  style={{backgroundColor: 'grey'}} />
+      
           <span
           style={{
             display: "flex",

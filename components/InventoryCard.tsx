@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { IInventory, IItem, IPlayer } from "../lib/functions";
 import Image from "next/image";
 import { Badge, Card, message } from "antd";
+import { Inventory } from ".prisma/client";
 
 interface IInventoryProps {
   player: IPlayer;
@@ -41,6 +42,16 @@ const InventoryCard = ({
     });
   };
 
+  const decreaseItem = async (inventory: IInventory) => {
+    await fetch(`http://localhost:3000/api/player/removeInventoryItem/`, {
+      method: "POST",
+      body: JSON.stringify(inventory),
+    }).then((response) => {
+      console.log(response);
+    });
+  };
+
+  //
   const clickItem = (slotItemClicked: IItem) => {
     if (slotItemClicked.itemType.type === "consumable") {
       switch (slotItemClicked.itemType.subType) {
@@ -58,6 +69,8 @@ const InventoryCard = ({
                 health: (player.health += slotItemClicked.effectAmount),
                 inventory: player.inventory,
               });
+
+              decreaseItem(itemInInventory);
             } else {
               setPlayer({
                 ...player,
@@ -85,7 +98,7 @@ const InventoryCard = ({
       <div className="bag-slots">
         {createInventory().map((slot, index) => (
           <Badge
-            style={{ backgroundColor: globalCD ? "grey": "#773ee0" }}
+            style={{ backgroundColor: globalCD ? "grey" : "#773ee0" }}
             count={slot?.itemQuantity <= 1 ? null : slot?.itemQuantity}
             offset={[-25, 0]}
             key={index}
@@ -94,6 +107,7 @@ const InventoryCard = ({
               {slot?.item ? (
                 <React.Fragment>
                   <Image
+                    draggable={true}
                     src={`/assets/items/${slot?.item?.itemType.type}/${slot?.item?.imageName}.png`}
                     width={55}
                     height={55}
