@@ -303,17 +303,6 @@ function FightPage({ player, monster }: IFightPageProps) {
 
           setPlayerHit({ dmg: upcomingHit, slot: "mainhand" });
 
-          if (monsterInState.health > 0 && playerInState.health > 0) {
-            // Text for display
-            //
-            setBattleLog([
-              ...battleLog,
-              <span>
-                Your {playerMainhand.name} hit {monsterInState.name} for
-                <span style={{ color: "green" }}> {upcomingHit}</span> damage.
-              </span>,
-            ]);
-          }
         }, playerMainhand.attackSpeed * 1000)
       );
 
@@ -327,10 +316,10 @@ function FightPage({ player, monster }: IFightPageProps) {
           //
           const calculatedTotalDamage =
             playerInState.strength * STATSMULTIPLIERS.STR +
-            playerOffhandInterval.maxDamage;
+            playerOffhand.maxDamage;
           const calculatedMinimumDamage =
             playerInState.strength * STATSMULTIPLIERS.STR +
-            playerOffhandInterval.minDamage;
+            playerOffhand.minDamage;
 
           const upcomingHit = Math.floor(
             Math.random() * (calculatedTotalDamage - calculatedMinimumDamage) +
@@ -338,19 +327,7 @@ function FightPage({ player, monster }: IFightPageProps) {
           );
 
           setPlayerHit({ dmg: upcomingHit, slot: "offhand" });
-
-          if (monsterInState.health > 0 && playerInState.health > 0) {
-            // Text for display
-            //
-            setBattleLog([
-              ...battleLog,
-              <span>
-                Your {playerOffhandInterval.name} hit {monsterInState.name} for
-                <span style={{ color: "green" }}> {upcomingHit}</span> damage.
-              </span>,
-            ]);
-          }
-        }, playerOffhandInterval.attackSpeed * 1000)
+        }, playerOffhand.attackSpeed * 1000)
       );
     } else {
       // 2 handed hit

@@ -2,20 +2,27 @@ import { Player } from "@prisma/client";
 import { Card, Progress } from "antd";
 import { useSession } from "next-auth/client";
 import React from "react";
-
-
+import { IPlayer } from "../lib/functions";
+import { WEAPONTYPES } from "../pages/fight";
 
 interface IPlayerCardProps {
-  player: Player;
+  player: IPlayer;
 }
 
 const PlayerCard = ({ player }: IPlayerCardProps) => {
   const [session, loading] = useSession();
-  let equipement;
+  let playerMainhand = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.MAINHAND
+  )?.item;
+  let playerOffhand = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.OFFHAND
+  )?.item;
+  const playerTwoHanded = player.equipement.find(
+    (equip) => equip.slot.type === WEAPONTYPES.TWOHANDED
+  )?.item;
 
   if (!player) return null;
   if (!loading && !session) return null;
-
 
   const calculatePercentHealth = (cur: number, max: number) => {
     const p = cur / max;
@@ -29,6 +36,28 @@ const PlayerCard = ({ player }: IPlayerCardProps) => {
     return Math.round(result);
   };
 
+  const playerWeaponInfo = () => {
+    let text;
+
+    if (playerTwoHanded) {
+      text = (
+        <b>
+          {playerTwoHanded.name} ({playerTwoHanded.minDamage}-
+          {playerTwoHanded.maxDamage})
+        </b>
+      );
+    } else {
+      text = (
+        <b>
+          Mainhand: {playerMainhand.name} ({playerMainhand.minDamage}-
+          {playerMainhand.maxDamage}) <br/> Offhand: {playerOffhand.name} (
+          {playerOffhand.minDamage}-{playerOffhand.maxDamage})
+        </b>
+      );
+    }
+
+    return text;
+  };
   return (
     <React.Fragment>
       <Card
@@ -64,10 +93,7 @@ const PlayerCard = ({ player }: IPlayerCardProps) => {
               : "success"
           }
         />
-        <p>
-         {/*  {equipement.weapon.name} ({equipement.weapon.minDamage}-
-          {equipement.weapon.maxDamage}) */}
-        </p>
+        <p>{playerWeaponInfo()}</p>
       </Card>
     </React.Fragment>
   );
