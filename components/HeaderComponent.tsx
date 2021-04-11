@@ -78,15 +78,15 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
           }).format(player?.gold)}
         </span>
 
-        <span style={{ marginLeft: 26 }}>LEVEL: {player.level}</span>
+        <span style={{ marginLeft: 26 }}>LEVEL: {player?.level}</span>
 
-        <span style={{ marginLeft: 26 }}>STR: {player.strength}</span>
+        <span style={{ marginLeft: 26 }}>STR: {player?.strength}</span>
 
-        <span style={{ marginLeft: 26 }}>DEX: {player.dexterity}</span>
+        <span style={{ marginLeft: 26 }}>DEX: {player?.dexterity}</span>
 
-        <span style={{ marginLeft: 26 }}>INT: {player.intelligence}</span>
+        <span style={{ marginLeft: 26 }}>INT: {player?.intelligence}</span>
 
-        <span style={{ marginLeft: 26 }}>CON: {player.constitution}</span>
+        <span style={{ marginLeft: 26 }}>CON: {player?.constitution}</span>
 
         <style jsx>{`
           .currency {
