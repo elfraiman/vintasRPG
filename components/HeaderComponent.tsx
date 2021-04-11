@@ -75,7 +75,7 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
           <Image src="/assets/icons/gold-coins.svg" width={25} height={20} />
           {new Intl.NumberFormat("en-IN", {
             maximumSignificantDigits: 3,
-          }).format(player.gold)}
+          }).format(player?.gold)}
         </span>
 
         <span style={{ marginLeft: 26 }}>LEVEL: {player.level}</span>
