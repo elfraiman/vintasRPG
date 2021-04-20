@@ -59,7 +59,7 @@ const ChurchPage = (props) => {
     // Heal amount cost
     //
 
-    const costToHeal = Math.floor(amountToHeal * 1.40) + 1;
+    const costToHeal = Math.floor(amountToHeal * 1.10) + 1;
     console.log(amountToHeal, costToHeal)
     setCost(costToHeal);
 
