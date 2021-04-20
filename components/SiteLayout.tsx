@@ -1,4 +1,4 @@
-import { Divider, Layout, Menu } from "antd";
+import { Layout, Menu } from "antd";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
@@ -13,6 +13,8 @@ const SiteLayout = ({ children, player }: ISiteLayoutProps) => {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const [selectedKey, setSelectedKey] = useState({ current: router.pathname });
+
+  
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider trigger={null} collapsible collapsed={collapsed}>

@@ -286,7 +286,7 @@ function FightPage({ player, monster }: IFightPageProps) {
           if (globalCD) {
             return;
           }
- 
+
           const calculatedTotalDamage =
             playerInState.strength * STATSMULTIPLIERS.STR +
             playerMainhand.maxDamage;
@@ -300,7 +300,6 @@ function FightPage({ player, monster }: IFightPageProps) {
           );
 
           setPlayerHit({ dmg: upcomingHit, slot: "mainhand" });
-
         }, playerMainhand.attackSpeed * 1000)
       );
 
@@ -383,12 +382,6 @@ function FightPage({ player, monster }: IFightPageProps) {
     }
   }, [playerHit]);
 
-  const clearAllIntervals = () => {
-    clearInterval(playerTwohandInterval);
-    clearInterval(playerMainhandInterval);
-    clearInterval(playerOffhandInterval);
-    clearInterval(monsterInterval);
-  };
   const doMonsterAttack = () => {
     setMonsterInterval(
       setInterval(() => {
@@ -458,7 +451,6 @@ function FightPage({ player, monster }: IFightPageProps) {
   useEffect(() => {
     startFight();
     return () => {
-      savePlayer();
       clearAllIntervals();
     };
   }, []);
@@ -475,6 +467,13 @@ function FightPage({ player, monster }: IFightPageProps) {
   useEffect(() => {
     handleGlobalCD();
   }, [globalCD]);
+
+  const clearAllIntervals = () => {
+    clearInterval(playerTwohandInterval);
+    clearInterval(playerMainhandInterval);
+    clearInterval(playerOffhandInterval);
+    clearInterval(monsterInterval);
+  };
 
   return (
     <SiteLayout player={playerInState}>

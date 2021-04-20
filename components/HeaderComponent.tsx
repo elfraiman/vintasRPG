@@ -5,7 +5,7 @@ import { signOut, useSession } from "next-auth/client";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useEffect } from "react";
 
 const { Header } = Layout;
 
@@ -19,6 +19,11 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
     router.pathname === pathname;
   const [session, loading] = useSession();
 
+
+  useEffect(() => {
+    console.log('player change', player)
+  }, [player])
+  
   let right = null;
   let left = null;
 
@@ -73,9 +78,7 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
       <div className="left">
         <span className="currency">
           <Image src="/assets/icons/gold-coins.svg" width={25} height={20} />
-          {new Intl.NumberFormat("en-IN", {
-            maximumSignificantDigits: 3,
-          }).format(player?.gold)}
+          {new Intl.NumberFormat("en-IN").format(player?.gold)}
         </span>
 
         <span style={{ marginLeft: 26 }}>LEVEL: {player?.level}</span>

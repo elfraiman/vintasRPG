@@ -1,5 +1,6 @@
 import { Inventory } from ".prisma/client";
-import { Button, Card, message, Row, Spin } from "antd";
+import { Card, message, Row, Spin } from "antd";
+import { cloneDeep } from "lodash";
 import { getSession, useSession } from "next-auth/client";
 import Image from "next/image";
 import React, { useState } from "react";
@@ -7,9 +8,9 @@ import SiteLayout from "../components/SiteLayout";
 import {
   getItems,
   getPlayer,
-  IInventory,
+
   IItem,
-  IPlayer,
+  IPlayer
 } from "../lib/functions";
 
 export const getServerSideProps = async (context) => {
@@ -31,7 +32,7 @@ interface IMarketPageProps {
 }
 
 const MarketPage = ({ player, items }: IMarketPageProps) => {
-  const [playerInState, setPlayerInState] = useState(player);
+  const [playerInState, setPlayerInState] = useState(cloneDeep(player));
   const [session, loading] = useSession();
   const [purchaseLoad, setPurchaseLoad] = useState(false);
 
@@ -55,15 +56,14 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
 
     // check if the player already has that inventory (item)
     //
-    const playerAlreadyOwnsItem = playerInState.inventory.filter(
+    const playerAlreadyOwnsItem = player.inventory.filter(
       (item) => item.itemId === inventory.itemId
     );
 
- 
     if (playerAlreadyOwnsItem.length > 0) {
       const doesUserOwnMaxAllowed =
-      playerAlreadyOwnsItem[0]?.itemQuantity < item?.maximumStack;
-  
+        playerAlreadyOwnsItem[0]?.itemQuantity < item?.maximumStack;
+
       if (!doesUserOwnMaxAllowed) {
         message.error("You cannot buy anymore of these");
         return;
@@ -73,10 +73,6 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
       // for the request
       //
       inventory.id = playerAlreadyOwnsItem[0]?.id;
-    } else {
-      console.log("else", inventory);
-      delete inventory["id"]
-      console.log("else", inventory);
     }
 
     await fetch(`http://localhost:3000/api/player/addInventoryItem`, {
@@ -102,12 +98,35 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
         // We set a +1 here on a local state player obj inventory so
         // have the same amount on the client side without realtime data
         //
-        playerAlreadyOwnsItem[0].itemQuantity += 1;
+        if (playerAlreadyOwnsItem.length > 0) {
+          playerAlreadyOwnsItem[0].itemQuantity += 1;
+        }
         setPurchaseLoad(false);
       })
       .catch((e) => {
         setPurchaseLoad(false);
         console.error(e);
+      })
+      .finally(async () => {
+        await fetch(`http://localhost:3000/api/player/playerGold`, {
+          method: "POST",
+          body: JSON.stringify({
+            playerId: player.id,
+            newAmount: player.gold - item.cost,
+          }),
+        })
+          .then(() => {
+            setPurchaseLoad(false);
+          })
+          .catch((e) => {
+            setPurchaseLoad(false);
+            console.error(e);
+          });
+
+        // handle clientside gold
+        //
+        player.gold = player.gold -= item.cost;
+        setPlayerInState({ ...player });
       });
   };
 
