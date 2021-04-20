@@ -6,20 +6,25 @@ import prisma from "../../../lib/prisma";
 // PUT
 export default async function handle(req, res) {
   const inventory: Inventory = JSON.parse(req.body);
+  let result;
 
-  const result = await prisma.inventory.upsert({
-    where: { id: inventory.id ?? 99999999999 },
-    update: {
-      ...inventory,
-      itemQuantity: {
-        increment: 1,
+  if (inventory.id) {
+    result = await prisma.inventory.update({
+      where: { id: inventory.id },
+      data: {
+        ...inventory,
+        itemQuantity: {
+          increment: 1,
+        },
       },
-    },
-    create: {
-      ...inventory,
-      playerId: inventory?.playerId,
-    },
-  });
+    });
+  } else {
+    result = await prisma.inventory.create({
+      data: {
+        ...inventory,
+      },
+    });
+  }
 
   res.json(result);
 }

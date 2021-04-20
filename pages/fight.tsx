@@ -286,9 +286,7 @@ function FightPage({ player, monster }: IFightPageProps) {
           if (globalCD) {
             return;
           }
-          // If player is duel wielding we cant to create
-          // more hits.
-          //
+ 
           const calculatedTotalDamage =
             playerInState.strength * STATSMULTIPLIERS.STR +
             playerMainhand.maxDamage;
@@ -311,9 +309,6 @@ function FightPage({ player, monster }: IFightPageProps) {
           if (globalCD) {
             return;
           }
-          // If player is duel wielding we cant to create
-          // more hits.
-          //
           const calculatedTotalDamage =
             playerInState.strength * STATSMULTIPLIERS.STR +
             playerOffhand.maxDamage;

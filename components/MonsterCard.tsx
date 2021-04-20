@@ -48,7 +48,7 @@ const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
           }}
         >
           <Image
-            src={`/assets/icons/monster-${monster.name}.svg`}
+            src={`/assets/icons/monster-${monster?.name.toLowerCase()}.svg`}
             width={120}
             height={120}
           />

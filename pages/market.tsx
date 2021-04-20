@@ -4,7 +4,13 @@ import { getSession, useSession } from "next-auth/client";
 import Image from "next/image";
 import React, { useState } from "react";
 import SiteLayout from "../components/SiteLayout";
-import { getItems, getPlayer, IInventory, IItem, IPlayer } from "../lib/functions";
+import {
+  getItems,
+  getPlayer,
+  IInventory,
+  IItem,
+  IPlayer,
+} from "../lib/functions";
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
@@ -46,27 +52,31 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
    */
   const buyPotion = async (inventory: Inventory, item: IItem) => {
     setPurchaseLoad(true);
+
     // check if the player already has that inventory (item)
     //
-    const sameItemInInventory = playerInState.inventory.filter(
+    const playerAlreadyOwnsItem = playerInState.inventory.filter(
       (item) => item.itemId === inventory.itemId
     );
 
-    const doesUserOwnMaxAllowed = sameItemInInventory[0].itemQuantity < item.maximumStack
-    console.log(doesUserOwnMaxAllowed);
-
-    // If player already owns this item in his inventory we will set
-    // the incoming inventory Id to that item's inventory ID
-    // for the request
-    //
-    if (sameItemInInventory.length > 0) {
-      inventory.id = sameItemInInventory[0]?.id;
-    }
-    
-
-    if ( !doesUserOwnMaxAllowed ) {
+ 
+    if (playerAlreadyOwnsItem.length > 0) {
+      const doesUserOwnMaxAllowed =
+      playerAlreadyOwnsItem[0]?.itemQuantity < item?.maximumStack;
+  
+      if (!doesUserOwnMaxAllowed) {
         message.error("You cannot buy anymore of these");
         return;
+      }
+      // If player already owns this item in his inventory we will set
+      // the incoming inventory Id to that item's inventory ID
+      // for the request
+      //
+      inventory.id = playerAlreadyOwnsItem[0]?.id;
+    } else {
+      console.log("else", inventory);
+      delete inventory["id"]
+      console.log("else", inventory);
     }
 
     await fetch(`http://localhost:3000/api/player/addInventoryItem`, {
@@ -92,7 +102,7 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
         // We set a +1 here on a local state player obj inventory so
         // have the same amount on the client side without realtime data
         //
-        sameItemInInventory[0].itemQuantity += 1;
+        playerAlreadyOwnsItem[0].itemQuantity += 1;
         setPurchaseLoad(false);
       })
       .catch((e) => {
@@ -100,7 +110,6 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
         console.error(e);
       });
   };
-
 
   return (
     <SiteLayout player={playerInState}>
@@ -116,17 +125,18 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
       >
         {/** Potion Shop Card */}
         <Card title="Potions">
-          {items?.map((item) => {
+          {items?.map((item, index) => {
             if (item?.itemType?.subType === "health") {
               return (
-                <span
+                <div
+                  key={index}
                   style={{ cursor: "pointer" }}
                   onClick={() =>
                     buyPotion(
                       {
-                        itemId: item.id,
+                        itemId: item?.id,
                         itemQuantity: 1,
-                        playerId: player.id,
+                        playerId: player?.id,
                         id: undefined, // Inventory ID,
                       },
                       item
@@ -152,7 +162,7 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
                     <b style={{ marginTop: 16 }}>Price: {item.cost}</b>
                     <p>{item.description}</p>
                   </Card.Grid>
-                </span>
+                </div>
               );
             }
           })}
