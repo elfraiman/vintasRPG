@@ -488,12 +488,12 @@ function FightPage({ player, monster }: IFightPageProps) {
           gridGap: 16,
         }}
       >
-        <PlayerCard player={playerInState} />
+        <PlayerCard player={playerInState} incomingDamage={monsterHit}/>
 
         <Card
           style={{
             height: 350,
-            width: "100%",
+            maxWidth: 450,
             overflowY: "hidden",
             padding: 16,
           }}
@@ -505,7 +505,7 @@ function FightPage({ player, monster }: IFightPageProps) {
           <div ref={dummyRef}></div>
         </Card>
 
-        <MonsterCard monster={monsterInState} />
+        <MonsterCard monster={monsterInState} incomingDamage={playerHit.dmg} />
       </div>
 
       <Row style={{ marginTop: 16 }}>

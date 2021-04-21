@@ -4,12 +4,14 @@ import { useSession } from "next-auth/client";
 import React from "react";
 import { IPlayer } from "../lib/functions";
 import { WEAPONTYPES } from "../pages/fight";
+import PowEffect from "./PowEffect";
 
 interface IPlayerCardProps {
   player: IPlayer;
+  incomingDamage: number;
 }
 
-const PlayerCard = ({ player }: IPlayerCardProps) => {
+const PlayerCard = ({ player, incomingDamage }: IPlayerCardProps) => {
   const [session, loading] = useSession();
   let playerMainhand = player.equipement.find(
     (equip) => equip.slot.type === WEAPONTYPES.MAINHAND
@@ -63,13 +65,14 @@ const PlayerCard = ({ player }: IPlayerCardProps) => {
       <Card
         title={player.name}
         style={{
-          width: "100%",
+          maxWidth: 450,
           minHeight: 350,
           display: "flex",
           flexDirection: "column",
         }}
         loading={loading}
       >
+        <PowEffect incomingDamage={incomingDamage} />
         <p> Level: {player.level}</p>
         <p style={{ marginBottom: 0 }}>Experience:</p>
         <Progress

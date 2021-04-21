@@ -5,13 +5,7 @@ import { getSession, useSession } from "next-auth/client";
 import Image from "next/image";
 import React, { useState } from "react";
 import SiteLayout from "../components/SiteLayout";
-import {
-  getItems,
-  getPlayer,
-
-  IItem,
-  IPlayer
-} from "../lib/functions";
+import { getItems, getPlayer, IItem, IPlayer } from "../lib/functions";
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
@@ -66,6 +60,7 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
 
       if (!doesUserOwnMaxAllowed) {
         message.error("You cannot buy anymore of these");
+        setPurchaseLoad(false);
         return;
       }
       // If player already owns this item in his inventory we will set
@@ -74,7 +69,6 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
       //
       inventory.id = playerAlreadyOwnsItem[0]?.id;
     }
-
     await fetch(`http://localhost:3000/api/player/addInventoryItem`, {
       method: "POST",
       body: JSON.stringify(inventory),
@@ -101,10 +95,8 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
         if (playerAlreadyOwnsItem.length > 0) {
           playerAlreadyOwnsItem[0].itemQuantity += 1;
         }
-        setPurchaseLoad(false);
       })
       .catch((e) => {
-        setPurchaseLoad(false);
         console.error(e);
       })
       .finally(async () => {
@@ -115,12 +107,11 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
             newAmount: player.gold - item.cost,
           }),
         })
-          .then(() => {
-            setPurchaseLoad(false);
-          })
           .catch((e) => {
-            setPurchaseLoad(false);
             console.error(e);
+          })
+          .finally(() => {
+            setPurchaseLoad(false);
           });
 
         // handle clientside gold
@@ -144,47 +135,62 @@ const MarketPage = ({ player, items }: IMarketPageProps) => {
       >
         {/** Potion Shop Card */}
         <Card title="Potions">
-          {items?.map((item, index) => {
-            if (item?.itemType?.subType === "health") {
-              return (
-                <div
-                  key={index}
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    buyPotion(
-                      {
-                        itemId: item?.id,
-                        itemQuantity: 1,
-                        playerId: player?.id,
-                        id: undefined, // Inventory ID,
-                      },
-                      item
-                    )
-                  }
-                >
-                  <Card.Grid
-                    style={{
-                      minHeight: "100%",
-                      minWidth: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Image
-                      src={`/assets/items/consumable/${item.imageName}.png`}
-                      width={50}
-                      height={50}
-                      layout="fixed"
-                    />
+          {purchaseLoad ? (
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                minHeight: "100%",
+              }}
+            >
+              <Spin />
+            </div>
+          ) : (
+            <React.Fragment>
+              {items?.map((item, index) => {
+                if (item?.itemType?.subType === "health") {
+                  return (
+                    <div
+                      key={index}
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        buyPotion(
+                          {
+                            itemId: item?.id,
+                            itemQuantity: 1,
+                            playerId: player?.id,
+                            id: undefined, // Inventory ID,
+                          },
+                          item
+                        )
+                      }
+                    >
+                      <Card.Grid
+                        style={{
+                          minHeight: "100%",
+                          minWidth: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Image
+                          src={`/assets/items/consumable/${item.imageName}.png`}
+                          width={50}
+                          height={50}
+                          layout="fixed"
+                        />
 
-                    <b style={{ marginTop: 16 }}>Price: {item.cost}</b>
-                    <p>{item.description}</p>
-                  </Card.Grid>
-                </div>
-              );
-            }
-          })}
+                        <b style={{ marginTop: 16 }}>Price: {item.cost}</b>
+                        <p>{item.description}</p>
+                      </Card.Grid>
+                    </div>
+                  );
+                }
+              })}
+            </React.Fragment>
+          )}
         </Card>
       </div>
     </SiteLayout>

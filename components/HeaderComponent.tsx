@@ -19,11 +19,6 @@ const HeaderComponent = ({ player }: IHeaderComponentProps) => {
     router.pathname === pathname;
   const [session, loading] = useSession();
 
-
-  useEffect(() => {
-    console.log('player change', player)
-  }, [player])
-  
   let right = null;
   let left = null;
 

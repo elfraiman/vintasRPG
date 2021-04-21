@@ -4,13 +4,21 @@ import { useSession } from "next-auth/client";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React from "react";
+import PowEffect from "./PowEffect";
+
 interface IMonsterCardProps {
   monster: Monster;
   showAttack?: boolean;
   hideHpBar?: boolean;
+  incomingDamage: number;
 }
 
-const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
+const MonsterCard = ({
+  monster,
+  showAttack,
+  hideHpBar,
+  incomingDamage,
+}: IMonsterCardProps) => {
   const router = useRouter();
   const [session, loading] = useSession();
 
@@ -28,18 +36,19 @@ const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
   };
 
   return (
-    <React.Fragment>
+    <div>
       <Card
         title={monster.name}
         style={{
-          width: "100%",
+          maxWidth: 450,
           height: 350,
           display: "flex",
           flexDirection: "column",
         }}
         loading={loading}
       >
-        <span
+                                <PowEffect incomingDamage={incomingDamage} />
+        <div
           style={{
             display: "flex",
             width: "100%",
@@ -52,7 +61,8 @@ const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
             width={120}
             height={120}
           />
-        </span>
+        </div>
+        
         <p> Level: {monster.level}</p>
 
         <React.Fragment>
@@ -64,6 +74,7 @@ const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
             <h4>Dead</h4>
           )}
         </React.Fragment>
+        
         {monster.health > 0 && !hideHpBar ? (
           <div>
             <Progress
@@ -90,8 +101,10 @@ const MonsterCard = ({ monster, showAttack, hideHpBar }: IMonsterCardProps) => {
         ) : (
           <></>
         )}
+
+        
       </Card>
-    </React.Fragment>
+    </div>
   );
 };
 
