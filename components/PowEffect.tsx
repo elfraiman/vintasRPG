@@ -11,7 +11,7 @@ const PowEffect = ({ incomingDamage }) => {
     setTimeout(() => {
       arrayOfDamage.pop();
 
-      setArrayOfDamage(arrayOfDamage);
+      setArrayOfDamage(arrayOfDamage.reverse());
 
       if (arrayOfDamage.length <= 0) {
         setArrayOfDamage([]);
