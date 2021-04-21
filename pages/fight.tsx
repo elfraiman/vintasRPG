@@ -280,7 +280,7 @@ function FightPage({ player, monster }: IFightPageProps) {
     if (playerDuelWielding) {
       // Main hand hit
       //
-
+  
       setPlayerMainHandInterval(
         setInterval(() => {
           if (globalCD) {
@@ -488,7 +488,11 @@ function FightPage({ player, monster }: IFightPageProps) {
           gridGap: 16,
         }}
       >
-        <PlayerCard player={playerInState} incomingDamage={monsterHit}/>
+        <PlayerCard
+          player={playerInState}
+          incomingDamage={monsterHit}
+          fightStarted={fightStarted}
+        />
 
         <Card
           style={{
@@ -508,13 +512,14 @@ function FightPage({ player, monster }: IFightPageProps) {
         <MonsterCard monster={monsterInState} incomingDamage={playerHit.dmg} />
       </div>
 
-      <Row style={{ marginTop: 16 }}>
+      <Row style={{ margin: 16 }}>
         {fightStarted ? (
           <Button>Run</Button>
         ) : (
           <Button onClick={startReFight}>Fight Again</Button>
         )}
       </Row>
+
       <Row>
         <Col>
           <InventoryCard
